@@ -1,0 +1,9 @@
+server:
+  applicationConnectors:
+    - type: http
+      port: 4410
+  adminConnectors:
+    - type: http
+      port: 4411
+
+stubBrokerURI: "http://localhost:6610/formPost/serviceAuthenticationRequest"
