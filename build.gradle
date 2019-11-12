@@ -3,7 +3,6 @@ apply plugin: 'application'
 apply plugin: 'idea'
 
 group 'uk.gov.ida'
-version '1.0-SNAPSHOT'
 
 repositories {
     mavenCentral()
@@ -11,6 +10,19 @@ repositories {
 
 project.ext {
     dropwizardVersion = '1.3.15'
+}
+
+distributions {
+    main {
+        contents {
+            from {
+                [
+                    'stub-trustframework-rp.yml'
+                ]
+            }
+
+        }
+    }
 }
 
 mainClassName = 'uk.gov.ida.stubtrustframeworkrp.StubTrustframeworkRPApplication'
@@ -25,3 +37,13 @@ dependencies {
         group: 'junit', name: 'junit', version: '4.12'
     )
 }
+
+run {
+    args 'server'
+}
+
+task pushToPaas(type: Exec) {
+    commandLine 'cf', 'push', 'stub-trustframework-rp', '-p', 'build/distributions/stub-trustframework-rp.zip'
+}
+
+pushToPaas.dependsOn distZip

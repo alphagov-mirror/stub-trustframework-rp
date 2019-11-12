@@ -2,6 +2,7 @@ package uk.gov.ida.stubtrustframeworkrp.resources;
 
 import io.dropwizard.views.View;
 import uk.gov.ida.stubtrustframeworkrp.configuration.StubTrustframeworkRPConfiguration;
+import uk.gov.ida.stubtrustframeworkrp.rest.Urls;
 import uk.gov.ida.stubtrustframeworkrp.views.StartPageView;
 
 import javax.ws.rs.FormParam;
@@ -11,8 +12,7 @@ import javax.ws.rs.Path;
 import javax.ws.rs.Produces;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
-import java.net.URI;
-import java.net.URISyntaxException;
+import javax.ws.rs.core.UriBuilder;
 
 @Path("/")
 public class StubRPResource {
@@ -32,16 +32,16 @@ public class StubRPResource {
     @GET
     @Path("/sendRequest")
     @Produces(MediaType.APPLICATION_JSON)
-    public Response sendRequest() throws URISyntaxException {
+    public Response sendRequest() {
 
         return Response
                 .status(302)
-                .location(new URI(configuration.getStubBrokerURI()))
+                .location(UriBuilder.fromUri(configuration.getStubBrokerURI()).path(Urls.StubBroker.REQUEST_URI).build())
                 .build();
     }
 
     @POST
-    @Path("/receiveRequest")
+    @Path("/response")
     public Response receiveResponse(
             @FormParam("jsonResponse") String response
     ) {
