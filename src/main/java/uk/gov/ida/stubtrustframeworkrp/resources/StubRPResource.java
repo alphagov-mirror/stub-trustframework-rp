@@ -1,6 +1,9 @@
 package uk.gov.ida.stubtrustframeworkrp.resources;
 
+import com.nimbusds.jose.util.JSONObjectUtils;
+import com.nimbusds.jwt.SignedJWT;
 import io.dropwizard.views.View;
+import net.minidev.json.JSONObject;
 import uk.gov.ida.stubtrustframeworkrp.configuration.StubTrustframeworkRPConfiguration;
 import uk.gov.ida.stubtrustframeworkrp.rest.Urls;
 import uk.gov.ida.stubtrustframeworkrp.views.StartPageView;
@@ -13,6 +16,8 @@ import javax.ws.rs.Produces;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 import javax.ws.rs.core.UriBuilder;
+import java.io.IOException;
+import java.text.ParseException;
 
 @Path("/")
 public class StubRPResource {
@@ -43,9 +48,20 @@ public class StubRPResource {
     @POST
     @Path("/response")
     public Response receiveResponse(
-            @FormParam("jsonResponse") String response
-    ) {
+            @FormParam("jsonResponse") String response, @FormParam("httpStatus") String httpStatus ) throws ParseException, IOException {
 
-       return Response.ok(response).build();
+
+
+        if (httpStatus.equals("200")) {
+            JSONObject jsonObject = JSONObjectUtils.parse(response);
+            SignedJWT signedJWT = SignedJWT.parse(jsonObject.get("jws").toString());
+
+
+            return Response.ok(signedJWT.getJWTClaimsSet().toJSONObject()).build();
+        } else {
+            return Response.ok(response + httpStatus).build();
+        }
+
+
     }
 }
