@@ -9,4 +9,5 @@ applications:
       JAVA_HOME: "../.java-buildpack/open_jdk_jre"
       JBP_CONFIG_OPEN_JDK_JRE: '{ jre: { version: 11.+ } }'
       STUB_BROKER_URI: https://stub-oidc-broker.cloudapps.digital
+      VERIFIABLE_CREDENTIALS_URI: https://verifiable-credentials-spike.cloudapps.digital
       APPLICATION_PORT: 8080

@@ -7,3 +7,5 @@ server:
       port: 4411
 
 stubBrokerURI: ${STUB_BROKER_URI:-"http://localhost:6610"}
+
+verifiableCredentialsURI: ${VERIFIABLE_CREDENTIALS_URI:-"http://localhost:3002"}
