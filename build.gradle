@@ -30,6 +30,7 @@ mainClassName = 'uk.gov.ida.stubtrustframeworkrp.StubTrustframeworkRPApplication
 dependencies {
     compile(
         "io.dropwizard:dropwizard-core:$dropwizardVersion",
+        "io.dropwizard:dropwizard-assets:$dropwizardVersion",
         "io.dropwizard:dropwizard-views-mustache:$dropwizardVersion",
         "javax.xml.bind:jaxb-api:2.3.1",
         "com.nimbusds:nimbus-jose-jwt:8.2.1"

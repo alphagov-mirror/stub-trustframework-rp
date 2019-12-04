@@ -1,6 +1,7 @@
 package uk.gov.ida.stubtrustframeworkrp;
 
 import io.dropwizard.Application;
+import io.dropwizard.assets.AssetsBundle;
 import io.dropwizard.configuration.EnvironmentVariableSubstitutor;
 import io.dropwizard.configuration.SubstitutingSourceProvider;
 import io.dropwizard.setup.Bootstrap;
@@ -24,6 +25,10 @@ public class StubTrustframeworkRPApplication extends Application<StubTrustframew
     @Override
     public void initialize(final Bootstrap<StubTrustframeworkRPConfiguration> bootstrap) {
         bootstrap.addBundle(new ViewBundle<>());
+        bootstrap.addBundle(new AssetsBundle("/stylesheets", "/stylesheets", null, "css"));
+        bootstrap.addBundle(new AssetsBundle("/javascript", "/javascript", null, "js"));
+        bootstrap.addBundle(new AssetsBundle("/assets/fonts", "/assets/fonts", null, "fonts"));
+        bootstrap.addBundle(new AssetsBundle("/assets/images", "/assets/images", null, "images"));
         bootstrap.setConfigurationSourceProvider(
                 new SubstitutingSourceProvider(
                         bootstrap.getConfigurationSourceProvider(),
