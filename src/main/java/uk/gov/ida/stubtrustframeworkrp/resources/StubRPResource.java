@@ -1,14 +1,12 @@
 package uk.gov.ida.stubtrustframeworkrp.resources;
 
-import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.databind.ObjectMapper;
 import com.nimbusds.jose.util.JSONObjectUtils;
 import com.nimbusds.jwt.SignedJWT;
 import io.dropwizard.views.View;
 import net.minidev.json.JSONObject;
-import org.eclipse.jetty.http.HttpStatus;
 import uk.gov.ida.stubtrustframeworkrp.configuration.StubTrustframeworkRPConfiguration;
 import uk.gov.ida.stubtrustframeworkrp.rest.Urls;
+import uk.gov.ida.stubtrustframeworkrp.service.ResponseService;
 import uk.gov.ida.stubtrustframeworkrp.views.StartPageView;
 
 import javax.ws.rs.FormParam;
@@ -19,19 +17,19 @@ import javax.ws.rs.Produces;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 import javax.ws.rs.core.UriBuilder;
-import java.io.IOException;
-import java.net.http.HttpClient;
-import java.net.http.HttpRequest;
-import java.net.http.HttpResponse;
 import java.text.ParseException;
+import java.util.Collection;
+import java.util.stream.Collectors;
 
 @Path("/")
 public class StubRPResource {
 
     private final StubTrustframeworkRPConfiguration configuration;
+    private final ResponseService responseService;
 
-    public StubRPResource(StubTrustframeworkRPConfiguration configuration) {
+    public StubRPResource(StubTrustframeworkRPConfiguration configuration, ResponseService responseService) {
         this.configuration = configuration;
+        this.responseService = responseService;
     }
 
     @GET
@@ -54,43 +52,17 @@ public class StubRPResource {
     @POST
     @Path("/response")
     public Response receiveResponse(
-            @FormParam("jsonResponse") String response, @FormParam("httpStatus") String httpStatus ) throws ParseException, JsonProcessingException {
+            @FormParam("jsonResponse") String response, @FormParam("httpStatus") String httpStatus ) throws ParseException {
 
-        if (httpStatus.equals("200")) {
-            JSONObject jsonObject = JSONObjectUtils.parse(response);
-            SignedJWT signedJWT = SignedJWT.parse(jsonObject.get("jws").toString());
-            if (validateVerifiableCredentials(signedJWT)) {
-                return Response.ok(signedJWT.getJWTClaimsSet().toJSONObject().toJSONString()).build();
+        if (httpStatus.equals("200") && !(response.length() == 0)) {
+            JSONObject jsonResponse = JSONObjectUtils.parse(response);
+            Collection<String> errors = responseService.validateResponse(jsonResponse);
+            if (errors.isEmpty()) {
+                return Response.ok(SignedJWT.parse(jsonResponse.get("jws").toString()).getJWTClaimsSet().toString()).build();
             }
-                return Response.ok("Unable to validate signature of VerifiableCredentials").build();
+                return Response.ok("The following errors have occurred in the response: " + errors.stream().collect(Collectors.joining(" , "))).build();
         } else {
-            return Response.ok(response + httpStatus).build();
+            return Response.ok("Error in response with HttpStatus: " + httpStatus + " Response Body: " + response).build();
         }
-    }
-
-    //This will be validated by the RP and the logic in the Node app needs to be reversed engineered into here
-    private boolean validateVerifiableCredentials(SignedJWT signedJWT) throws ParseException {
-        HttpClient httpClient = HttpClient.newBuilder()
-                .build();
-
-        String jsonString = signedJWT.getJWTClaimsSet().toJSONObject().toJSONString().replace("\\", "");
-
-        HttpRequest request = HttpRequest.newBuilder()
-                .header("Content-Type", "application/json")
-                .POST(HttpRequest.BodyPublishers.ofString(jsonString))
-                .uri(UriBuilder.fromUri(configuration.getVerifiableCredentialsURI()).path("/verify").build())
-                .build();
-
-        HttpResponse<String> response;
-        try {
-            response = httpClient.send(request, HttpResponse.BodyHandlers.ofString());
-        } catch (IOException | InterruptedException e) {
-            throw new RuntimeException(e);
-        }
-
-        if (response.statusCode() == HttpStatus.OK_200) {
-            return true;
-        }
-        return false;
     }
 }
