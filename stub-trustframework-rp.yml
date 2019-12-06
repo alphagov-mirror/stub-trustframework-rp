@@ -4,7 +4,7 @@ server:
       port: ${APPLICATION_PORT:-4410}
   adminConnectors:
     - type: http
-      port: 4411
+      port: ${ADMIN_PORT:-4111}
 
 stubBrokerURI: ${STUB_BROKER_URI:-"http://localhost:6610"}
 
