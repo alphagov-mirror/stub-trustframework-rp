@@ -7,6 +7,7 @@ public class StubTrustframeworkRPConfiguration extends Configuration {
     private String stubBrokerURI;
     private String verifiableCredentialsURI;
     private String trustframeworkRP;
+    private String rp;
 
     public String getStubBrokerURI() {
         return stubBrokerURI;
@@ -18,5 +19,9 @@ public class StubTrustframeworkRPConfiguration extends Configuration {
 
     public String getTrustframeworkRP() {
         return trustframeworkRP;
+    }
+
+    public String getRp() {
+        return rp;
     }
 }

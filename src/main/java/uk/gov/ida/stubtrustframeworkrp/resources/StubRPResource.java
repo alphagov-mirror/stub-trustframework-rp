@@ -7,7 +7,7 @@ import net.minidev.json.JSONObject;
 import uk.gov.ida.stubtrustframeworkrp.configuration.StubTrustframeworkRPConfiguration;
 import uk.gov.ida.stubtrustframeworkrp.rest.Urls;
 import uk.gov.ida.stubtrustframeworkrp.service.ResponseService;
-import uk.gov.ida.stubtrustframeworkrp.views.StartPageView;
+import uk.gov.ida.stubtrustframeworkrp.views.RPStartPageView;
 
 import javax.ws.rs.FormParam;
 import javax.ws.rs.GET;
@@ -34,7 +34,7 @@ public class StubRPResource {
     @GET
     @Path("/")
     public View startPage() {
-        return new  StartPageView();
+        return new RPStartPageView(configuration.getRp());
     }
 
     @GET

@@ -12,3 +12,4 @@ applications:
       VERIFIABLE_CREDENTIALS_URI: https://verifiable-credentials-spike.cloudapps.digital
       TRUSTFRAMEWORK_RP: https://stub-trustframework-rp-1.cloudapps.digital/response
       APPLICATION_PORT: 8080
+      RP: dbs
