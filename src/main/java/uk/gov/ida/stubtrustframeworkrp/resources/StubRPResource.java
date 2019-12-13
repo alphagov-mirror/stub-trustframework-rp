@@ -17,9 +17,8 @@ import javax.ws.rs.Produces;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 import javax.ws.rs.core.UriBuilder;
+import java.net.URI;
 import java.text.ParseException;
-import java.util.Collection;
-import java.util.stream.Collectors;
 
 @Path("/")
 public class StubRPResource {
@@ -42,10 +41,11 @@ public class StubRPResource {
     @Path("/sendRequest")
     @Produces(MediaType.APPLICATION_JSON)
     public Response sendRequest() {
-
+        URI uri = UriBuilder.fromUri(configuration.getStubBrokerURI()).path(Urls.StubBroker.REQUEST_URI).queryParam("response-uri", configuration.getTrustframeworkRP()).build();
+        
         return Response
                 .status(302)
-                .location(UriBuilder.fromUri(configuration.getStubBrokerURI()).path(Urls.StubBroker.REQUEST_URI).build())
+                .location(uri)
                 .build();
     }
 
@@ -56,13 +56,9 @@ public class StubRPResource {
 
         if (httpStatus.equals("200") && !(response.length() == 0)) {
             JSONObject jsonResponse = JSONObjectUtils.parse(response);
-            Collection<String> errors = responseService.validateResponse(jsonResponse);
-            if (errors.isEmpty()) {
-                return Response.ok(SignedJWT.parse(jsonResponse.get("jws").toString()).getJWTClaimsSet().toString()).build();
+            String parsedClaimSet = SignedJWT.parse(jsonResponse.get("jws").toString()).getJWTClaimsSet().toString();
+            return Response.ok("The Response from Broker is: " + httpStatus + " Response Body: " + parsedClaimSet).build();
             }
-                return Response.ok("The following errors have occurred in the response: " + errors.stream().collect(Collectors.joining(" , "))).build();
-        } else {
-            return Response.ok("Error in response with HttpStatus: " + httpStatus + " Response Body: " + response).build();
-        }
+        return Response.ok("Error Response from Broker: " + httpStatus + " Response Body: " + response).build();
     }
 }

@@ -9,3 +9,5 @@ server:
 stubBrokerURI: ${STUB_BROKER_URI:-"http://localhost:6610"}
 
 verifiableCredentialsURI: ${VERIFIABLE_CREDENTIALS_URI:-"http://localhost:3002"}
+
+trustframeworkRP: ${TRUSTFRAMEWORK_RP:-"http://localhost:4410/response"}

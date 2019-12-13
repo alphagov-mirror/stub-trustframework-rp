@@ -10,4 +10,5 @@ applications:
       JBP_CONFIG_OPEN_JDK_JRE: '{ jre: { version: 11.+ } }'
       STUB_BROKER_URI: https://stub-oidc-broker-1.cloudapps.digital
       VERIFIABLE_CREDENTIALS_URI: https://verifiable-credentials-spike.cloudapps.digital
+      TRUSTFRAMEWORK_RP: https://stub-trustframework-rp-1.cloudapps.digital/response
       APPLICATION_PORT: 8080
