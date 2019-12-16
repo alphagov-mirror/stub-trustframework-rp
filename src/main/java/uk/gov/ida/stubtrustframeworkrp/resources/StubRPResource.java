@@ -7,6 +7,8 @@ import net.minidev.json.JSONObject;
 import uk.gov.ida.stubtrustframeworkrp.configuration.StubTrustframeworkRPConfiguration;
 import uk.gov.ida.stubtrustframeworkrp.rest.Urls;
 import uk.gov.ida.stubtrustframeworkrp.service.ResponseService;
+import uk.gov.ida.stubtrustframeworkrp.views.IdentityValidatedView;
+import uk.gov.ida.stubtrustframeworkrp.views.InvalidResponseView;
 import uk.gov.ida.stubtrustframeworkrp.views.TellUsWhoYouAreView;
 import uk.gov.ida.stubtrustframeworkrp.views.RPStartView;
 
@@ -58,14 +60,14 @@ public class StubRPResource {
 
     @POST
     @Path("/response")
-    public Response receiveResponse(
+    public View receiveResponse(
             @FormParam("jsonResponse") String response, @FormParam("httpStatus") String httpStatus ) throws ParseException {
 
         if (httpStatus.equals("200") && !(response.length() == 0)) {
             JSONObject jsonResponse = JSONObjectUtils.parse(response);
             String parsedClaimSet = SignedJWT.parse(jsonResponse.get("jws").toString()).getJWTClaimsSet().toString();
-            return Response.ok("The Response from Broker is: " + httpStatus + " Response Body: " + parsedClaimSet).build();
+            return new IdentityValidatedView(configuration.getRp());
             }
-        return Response.ok("Error Response from Broker: " + httpStatus + " Response Body: " + response).build();
+        return new InvalidResponseView();
     }
 }
