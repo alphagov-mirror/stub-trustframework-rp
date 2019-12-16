@@ -7,7 +7,8 @@ import net.minidev.json.JSONObject;
 import uk.gov.ida.stubtrustframeworkrp.configuration.StubTrustframeworkRPConfiguration;
 import uk.gov.ida.stubtrustframeworkrp.rest.Urls;
 import uk.gov.ida.stubtrustframeworkrp.service.ResponseService;
-import uk.gov.ida.stubtrustframeworkrp.views.RPStartPageView;
+import uk.gov.ida.stubtrustframeworkrp.views.TellUsWhoYouAreView;
+import uk.gov.ida.stubtrustframeworkrp.views.RPStartView;
 
 import javax.ws.rs.FormParam;
 import javax.ws.rs.GET;
@@ -34,7 +35,13 @@ public class StubRPResource {
     @GET
     @Path("/")
     public View startPage() {
-        return new RPStartPageView(configuration.getRp());
+        return new RPStartView(configuration.getRp());
+    }
+
+    @GET
+    @Path("/tellUsWhoYouAre")
+    public View tellUsWhoYouAre() {
+        return new TellUsWhoYouAreView();
     }
 
     @GET
