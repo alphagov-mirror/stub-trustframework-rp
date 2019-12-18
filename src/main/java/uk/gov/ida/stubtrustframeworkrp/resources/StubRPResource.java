@@ -1,10 +1,12 @@
 package uk.gov.ida.stubtrustframeworkrp.resources;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.nimbusds.jose.util.JSONObjectUtils;
 import com.nimbusds.jwt.SignedJWT;
 import io.dropwizard.views.View;
 import net.minidev.json.JSONObject;
 import uk.gov.ida.stubtrustframeworkrp.configuration.StubTrustframeworkRPConfiguration;
+import uk.gov.ida.stubtrustframeworkrp.domain.Address;
 import uk.gov.ida.stubtrustframeworkrp.rest.Urls;
 import uk.gov.ida.stubtrustframeworkrp.service.ResponseService;
 import uk.gov.ida.stubtrustframeworkrp.views.IdentityValidatedView;
@@ -20,6 +22,7 @@ import javax.ws.rs.Produces;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 import javax.ws.rs.core.UriBuilder;
+import java.io.IOException;
 import java.net.URI;
 import java.text.ParseException;
 
@@ -61,13 +64,29 @@ public class StubRPResource {
     @POST
     @Path("/response")
     public View receiveResponse(
-            @FormParam("jsonResponse") String response, @FormParam("httpStatus") String httpStatus ) throws ParseException {
+            @FormParam("jsonResponse") String response, @FormParam("httpStatus") String httpStatus ) {
 
         if (httpStatus.equals("200") && !(response.length() == 0)) {
-            JSONObject jsonResponse = JSONObjectUtils.parse(response);
-            String parsedClaimSet = SignedJWT.parse(jsonResponse.get("jws").toString()).getJWTClaimsSet().toString();
-            return new IdentityValidatedView(configuration.getRp());
+            JSONObject jsonResponse;
+            JSONObject jsonObject;
+            Address address;
+            try {
+                jsonResponse = JSONObjectUtils.parse(response);
+                jsonObject = SignedJWT.parse(jsonResponse.get("jws").toString()).getJWTClaimsSet().toJSONObject();
+                address = deserializeAddressFromJWT(jsonObject);
+            } catch (ParseException| IOException e) {
+                return new InvalidResponseView();
             }
+            return new IdentityValidatedView(configuration.getRp(), address);
+        }
         return new InvalidResponseView();
+    }
+
+    private Address deserializeAddressFromJWT(JSONObject jwtJson) throws IOException, ParseException {
+        JSONObject credential = JSONObjectUtils.parse(jwtJson.get("vc").toString());
+        JSONObject credentialSubject = JSONObjectUtils.parse(credential.get("credentialSubject").toString());
+        JSONObject jsonAddress = JSONObjectUtils.parse(credentialSubject.get("address").toString());
+        ObjectMapper objectMapper = new ObjectMapper();
+        return objectMapper.readValue(jsonAddress.toJSONString(), Address.class);
     }
 }
