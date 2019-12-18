@@ -75,11 +75,11 @@ public class StubRPResource {
                 jsonObject = SignedJWT.parse(jsonResponse.get("jws").toString()).getJWTClaimsSet().toJSONObject();
                 address = deserializeAddressFromJWT(jsonObject);
             } catch (ParseException| IOException e) {
-                return new InvalidResponseView();
+                return new InvalidResponseView(e.toString());
             }
             return new IdentityValidatedView(configuration.getRp(), address);
         }
-        return new InvalidResponseView();
+        return new InvalidResponseView("Status: " + httpStatus + " with response: " + response);
     }
 
     private Address deserializeAddressFromJWT(JSONObject jwtJson) throws IOException, ParseException {
