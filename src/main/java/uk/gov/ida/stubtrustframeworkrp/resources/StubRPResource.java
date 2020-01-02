@@ -66,7 +66,7 @@ public class StubRPResource {
     public View receiveResponse(
             @FormParam("jsonResponse") String response, @FormParam("httpStatus") String httpStatus ) {
 
-        if (httpStatus.equals("200") && !(response.length() == 0)) {
+        if (httpStatus.equals("200") && !(response.length() == 0) && !response.contains("error")) {
             JSONObject jsonResponse;
             JSONObject jsonObject;
             Address address;
