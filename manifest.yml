@@ -13,3 +13,16 @@ applications:
       TRUSTFRAMEWORK_RP: https://stub-trustframework-rp-1.cloudapps.digital/response
       APPLICATION_PORT: 8080
       RP: dbs
+  - name: stub-trustframework-rp-2
+    memory: 1G
+    buildpacks:
+      - java_buildpack
+    command: (cd stub-trustframework-rp && ls -l &&  bin/stub-trustframework-rp server ./stub-trustframework-rp.yml)
+    env:
+      JAVA_HOME: "../.java-buildpack/open_jdk_jre"
+      JBP_CONFIG_OPEN_JDK_JRE: '{ jre: { version: 11.+ } }'
+      STUB_BROKER_URI: https://stub-oidc-broker-2.cloudapps.digital
+      VERIFIABLE_CREDENTIALS_URI: https://verifiable-credentials-spike.cloudapps.digital
+      TRUSTFRAMEWORK_RP: https://stub-trustframework-rp-2.cloudapps.digital/response
+      APPLICATION_PORT: 8080
+      RP: dwp

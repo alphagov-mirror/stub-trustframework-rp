@@ -45,11 +45,11 @@ run {
 }
 
 task pushRP2ToPaas(type: Exec) {
-    commandLine 'cf', 'push', 'stub-trustframework-rp-2', '-f', 'manifest-2.yml', '-p', 'build/distributions/stub-trustframework-rp.zip'
+    commandLine 'cf', 'push', 'stub-trustframework-rp-2', '-p', 'build/distributions/stub-trustframework-rp.zip'
 }
 
 task pushToPaas(type: Exec) {
-    commandLine 'cf', 'push', 'stub-trustframework-rp-1', '-f', 'manifest-1.yml', '-p', 'build/distributions/stub-trustframework-rp.zip'
+    commandLine 'cf', 'push', 'stub-trustframework-rp-1', '-p', 'build/distributions/stub-trustframework-rp.zip'
 }
 
 pushToPaas.dependsOn distZip
