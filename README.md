@@ -11,3 +11,7 @@ Stub Trust Framework RP acts as a service that can consume identities from a Bro
 * To deploy Stub Trust framework RP login to the PAAS and select the build-learn space. 
 * Run './gradlew pushToPaas' and this will deploy the app.
 * RP-1 can be located on the PAAS at https://stub-trustframework-rp-1.cloudapps.digital/ whilst RP-2 can be located on the PAAS at https://stub-trustframework-rp-2.cloudapps.digital/.
+
+## License
+
+[MIT](https://github.com/alphagov/stub-trustframework-rp/blob/master/LICENCE)
