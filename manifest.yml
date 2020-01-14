@@ -1,6 +1,7 @@
 ---
 applications:
   - name: stub-trustframework-rp-1
+    path: build/distributions/stub-trustframework-rp.zip
     memory: 1G
     buildpacks:
       - java_buildpack
@@ -14,6 +15,7 @@ applications:
       APPLICATION_PORT: 8080
       RP: dbs
   - name: stub-trustframework-rp-2
+    path: build/distributions/stub-trustframework-rp.zip
     memory: 1G
     buildpacks:
       - java_buildpack

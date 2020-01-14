@@ -44,14 +44,8 @@ run {
     args 'server'
 }
 
-task pushRP2ToPaas(type: Exec) {
-    commandLine 'cf', 'push', 'stub-trustframework-rp-2', '-p', 'build/distributions/stub-trustframework-rp.zip'
-}
-
 task pushToPaas(type: Exec) {
-    commandLine 'cf', 'push', 'stub-trustframework-rp-1', '-p', 'build/distributions/stub-trustframework-rp.zip'
+    commandLine 'cf', 'push'
 }
 
 pushToPaas.dependsOn distZip
-pushToPaas.dependsOn 'pushRP2ToPaas'
-
