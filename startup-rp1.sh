@@ -2,7 +2,7 @@
 set -e
 
 CONFIG_FILE=./stub-trustframework-rp.yml
-export STUB_BROKER_URI=http://localhost:6610
+export SERVICE_PROVIDER_URI=http://localhost:2210
 export APPLICATION_PORT=4410
 export ADMIN_PORT=4411
 export TRUSTFRAMEWORK_RP=http://localhost:4410/response

@@ -4,13 +4,13 @@ import io.dropwizard.Configuration;
 
 public class StubTrustframeworkRPConfiguration extends Configuration {
 
-    private String stubBrokerURI;
+    private String serviceProviderURI;
     private String verifiableCredentialsURI;
     private String trustframeworkRP;
     private String rp;
 
-    public String getStubBrokerURI() {
-        return stubBrokerURI;
+    public String getServiceProviderURI() {
+        return serviceProviderURI;
     }
 
     public String getVerifiableCredentialsURI() {

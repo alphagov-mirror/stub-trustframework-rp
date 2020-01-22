@@ -24,6 +24,10 @@ import javax.ws.rs.core.Response;
 import javax.ws.rs.core.UriBuilder;
 import java.io.IOException;
 import java.net.URI;
+import java.net.URISyntaxException;
+import java.net.http.HttpClient;
+import java.net.http.HttpRequest;
+import java.net.http.HttpResponse;
 import java.text.ParseException;
 
 @Path("/")
@@ -52,13 +56,24 @@ public class StubRPResource {
     @GET
     @Path("/sendRequest")
     @Produces(MediaType.APPLICATION_JSON)
-    public Response sendRequest() {
-        URI uri = UriBuilder.fromUri(configuration.getStubBrokerURI()).path(Urls.StubBroker.REQUEST_URI).queryParam("response-uri", configuration.getTrustframeworkRP()).build();
-        
+    public Response sendRequest() throws URISyntaxException {
+        URI brokerUri = new URI(generateRequestFromServiceProvider());
+
         return Response
                 .status(302)
-                .location(uri)
+                .location(brokerUri)
                 .build();
+    }
+
+    @POST
+    @Path("/authenticationResponse")
+    public View handleAuthenticationResponse(String responseBody) throws ParseException, IOException {
+        String userCredentials = sendAuthenticationResponseToServiceProvider(responseBody);
+        JSONObject jsonResponse = JSONObjectUtils.parse(userCredentials);
+        JSONObject jsonObject = SignedJWT.parse(jsonResponse.get("jws").toString()).getJWTClaimsSet().toJSONObject();
+        Address address = deserializeAddressFromJWT(jsonObject);
+
+        return new IdentityValidatedView(configuration.getRp(), address);
     }
 
     @POST
@@ -88,5 +103,39 @@ public class StubRPResource {
         JSONObject jsonAddress = JSONObjectUtils.parse(credentialSubject.get("address").toString());
         ObjectMapper objectMapper = new ObjectMapper();
         return objectMapper.readValue(jsonAddress.toJSONString(), Address.class);
+    }
+
+    private String generateRequestFromServiceProvider() {
+        URI uri = UriBuilder.fromUri(configuration.getServiceProviderURI()).path(Urls.ServiceProvider.REQUEST_URI).build();
+
+        HttpRequest request = HttpRequest.newBuilder()
+                .GET()
+                .uri(uri)
+                .build();
+
+        HttpResponse<String> responseBody;
+        try {
+            responseBody = HttpClient.newHttpClient().send(request, HttpResponse.BodyHandlers.ofString());
+        } catch (IOException | InterruptedException e) {
+            throw new RuntimeException(e);
+        }
+        return responseBody.body();
+    }
+
+    private String sendAuthenticationResponseToServiceProvider(String authnResponse) {
+        URI uri = UriBuilder.fromUri(configuration.getServiceProviderURI()).path(Urls.ServiceProvider.AUTHN_RESPONSE_URI).build();
+
+        HttpRequest request = HttpRequest.newBuilder()
+                .POST(HttpRequest.BodyPublishers.ofString(authnResponse))
+                .uri(uri)
+                .build();
+
+        HttpResponse<String> responseBody;
+        try {
+            responseBody = HttpClient.newHttpClient().send(request, HttpResponse.BodyHandlers.ofString());
+        } catch (IOException | InterruptedException e) {
+            throw new RuntimeException(e);
+        }
+        return responseBody.body();
     }
 }
