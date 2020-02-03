@@ -5,8 +5,9 @@ CONFIG_FILE=./stub-trustframework-rp.yml
 export SERVICE_PROVIDER_URI=http://localhost:2210
 export APPLICATION_PORT=4410
 export ADMIN_PORT=4411
-export TRUSTFRAMEWORK_RP=http://localhost:4410/response
+export TRUSTFRAMEWORK_RP=http://localhost:4410
 export RP=dbs
+export IS_USING_SERVICE_PROVIDER=true
 log="logs/rp1_console.log"
 
 cd "$(dirname "$0")"

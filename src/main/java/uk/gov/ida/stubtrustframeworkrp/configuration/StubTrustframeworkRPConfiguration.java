@@ -8,6 +8,8 @@ public class StubTrustframeworkRPConfiguration extends Configuration {
     private String verifiableCredentialsURI;
     private String trustframeworkRP;
     private String rp;
+    private String brokerURI;
+    private boolean usingServiceProvider;
 
     public String getServiceProviderURI() {
         return serviceProviderURI;
@@ -23,5 +25,13 @@ public class StubTrustframeworkRPConfiguration extends Configuration {
 
     public String getRp() {
         return rp;
+    }
+
+    public String getBrokerURI() {
+        return brokerURI;
+    }
+
+    public boolean isUsingServiceProvider() {
+        return usingServiceProvider;
     }
 }

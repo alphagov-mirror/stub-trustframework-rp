@@ -57,11 +57,18 @@ public class StubRPResource {
     @Path("/sendRequest")
     @Produces(MediaType.APPLICATION_JSON)
     public Response sendRequest() throws URISyntaxException {
-        URI brokerUri = new URI(generateRequestFromServiceProvider());
+        URI uri;
+
+        if (configuration.isUsingServiceProvider()) {
+            uri = new URI(generateRequestFromServiceProvider());
+        } else {
+            URI resonseUri = UriBuilder.fromUri(configuration.getTrustframeworkRP()).path(Urls.RP.RESPONSE_URI).build();
+            uri = UriBuilder.fromUri(configuration.getBrokerURI()).path(Urls.Broker.REQUEST_URI).queryParam("response-uri", resonseUri).build();
+        }
 
         return Response
                 .status(302)
-                .location(brokerUri)
+                .location(uri)
                 .build();
     }
 
