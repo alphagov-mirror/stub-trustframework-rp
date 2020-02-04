@@ -77,6 +77,9 @@ public class StubRPResource {
     public View handleAuthenticationResponse(String responseBody) throws ParseException, IOException {
         String userCredentials = sendAuthenticationResponseToServiceProvider(responseBody);
         JSONObject jsonResponse = JSONObjectUtils.parse(userCredentials);
+        if (jsonResponse.get("jws") == null) {
+            return new InvalidResponseView(jsonResponse.toJSONString());
+        }
         JSONObject jsonObject = SignedJWT.parse(jsonResponse.get("jws").toString()).getJWTClaimsSet().toJSONObject();
         Address address = deserializeAddressFromJWT(jsonObject);
 
