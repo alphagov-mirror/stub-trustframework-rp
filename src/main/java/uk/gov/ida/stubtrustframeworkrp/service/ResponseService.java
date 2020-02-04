@@ -49,8 +49,6 @@ public class ResponseService {
 
     //This will be validated by the RP and the logic in the Node app needs to be reversed engineered into here
     private boolean validateVerifiableCredentials(SignedJWT signedJWT) throws ParseException {
-        HttpClient httpClient = HttpClient.newBuilder()
-                .build();
 
         String jsonString = signedJWT.getJWTClaimsSet().toJSONObject().toJSONString().replace("\\", "");
 
@@ -62,7 +60,7 @@ public class ResponseService {
 
         HttpResponse<String> response;
         try {
-            response = httpClient.send(request, HttpResponse.BodyHandlers.ofString());
+            response = HttpClient.newHttpClient().send(request, HttpResponse.BodyHandlers.ofString());
         } catch (IOException | InterruptedException e) {
             throw new RuntimeException(e);
         }
