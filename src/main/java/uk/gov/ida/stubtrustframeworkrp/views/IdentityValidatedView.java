@@ -1,7 +1,7 @@
 package uk.gov.ida.stubtrustframeworkrp.views;
 
 import io.dropwizard.views.View;
-import uk.gov.ida.stubtrustframeworkrp.domain.Address;
+import uk.gov.ida.stubtrustframeworkrp.dto.Address;
 
 public class IdentityValidatedView extends View {
 
