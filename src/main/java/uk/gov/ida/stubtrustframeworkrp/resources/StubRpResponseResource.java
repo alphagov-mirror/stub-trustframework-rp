@@ -58,7 +58,7 @@ public class StubRpResponseResource {
     @POST
     @Path("/response")
     public View receiveResponse(
-            @FormParam("jsonResponse") String response, @FormParam("httpStatus") String httpStatus ) {
+            @FormParam("jsonResponse") String response, @FormParam("httpStatus") String httpStatus) {
 
         if (httpStatus.equals("200") && !(response.length() == 0) && !response.contains("error")) {
             JSONObject jsonResponse;
@@ -68,7 +68,7 @@ public class StubRpResponseResource {
                 jsonResponse = JSONObjectUtils.parse(response);
                 jsonObject = SignedJWT.parse(jsonResponse.get("jws").toString()).getJWTClaimsSet().toJSONObject();
                 address = deserializeAddressFromJWT(jsonObject);
-            } catch (ParseException| IOException e) {
+            } catch (ParseException | IOException e) {
                 return new InvalidResponseView(e.toString());
             }
             return new IdentityValidatedView(configuration.getRp(), address);

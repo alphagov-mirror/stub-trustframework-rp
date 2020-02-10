@@ -8,6 +8,7 @@ export ADMIN_PORT=4411
 export TRUSTFRAMEWORK_RP=http://localhost:4410
 export RP=dbs
 export IS_USING_SERVICE_PROVIDER=true
+LOCAL_IP="$(ipconfig getifaddr en0)"
 export REDIS_URI="redis://${LOCAL_IP}:6380"
 log="logs/rp1_console.log"
 

@@ -41,13 +41,4 @@ public class OidcResponseBody {
     public String getNonce() {
         return nonce;
     }
-
-    @Override
-    public String toString() {
-        return "OidcResponseBody{" +
-                "oidcResponse='" + oidcResponse + '\'' +
-                ", state='" + state + '\'' +
-                ", nonce='" + nonce + '\'' +
-                '}';
-    }
 }
