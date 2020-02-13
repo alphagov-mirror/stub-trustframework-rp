@@ -2,12 +2,12 @@
 set -e
 
 CONFIG_FILE=./stub-trustframework-rp.yml
-export SERVICE_PROVIDER_URI=http://localhost:5510
+export SERVICE_PROVIDER_URI=http://localhost:2211
 export APPLICATION_PORT=4412
 export ADMIN_PORT=4413
 export TRUSTFRAMEWORK_RP=http://localhost:4412
 export RP=dwp
-export IS_USING_SERVICE_PROVIDER=false
+export IS_USING_SERVICE_PROVIDER=true
 log="logs/rp2_console.log"
 
 cd "$(dirname "$0")"
