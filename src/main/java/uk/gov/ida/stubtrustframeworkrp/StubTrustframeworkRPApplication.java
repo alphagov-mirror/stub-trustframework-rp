@@ -8,8 +8,11 @@ import io.dropwizard.setup.Bootstrap;
 import io.dropwizard.setup.Environment;
 import io.dropwizard.views.ViewBundle;
 import uk.gov.ida.stubtrustframeworkrp.configuration.StubTrustframeworkRPConfiguration;
-import uk.gov.ida.stubtrustframeworkrp.resources.StubRPResource;
-import uk.gov.ida.stubtrustframeworkrp.service.ResponseService;
+import uk.gov.ida.stubtrustframeworkrp.resources.StubRpRequestResource;
+import uk.gov.ida.stubtrustframeworkrp.resources.StubRpResponseResource;
+import uk.gov.ida.stubtrustframeworkrp.services.RedisService;
+import uk.gov.ida.stubtrustframeworkrp.services.RequestService;
+import uk.gov.ida.stubtrustframeworkrp.services.ResponseService;
 
 public class StubTrustframeworkRPApplication extends Application<StubTrustframeworkRPConfiguration> {
 
@@ -19,7 +22,9 @@ public class StubTrustframeworkRPApplication extends Application<StubTrustframew
 
     @Override
     public void run(StubTrustframeworkRPConfiguration configuration, Environment environment) {
-        environment.jersey().register(new StubRPResource(configuration, new ResponseService(configuration)));
+        RedisService redisService = new RedisService(configuration);
+        environment.jersey().register(new StubRpRequestResource(configuration, new RequestService(redisService)));
+        environment.jersey().register(new StubRpResponseResource(configuration, new ResponseService(configuration, redisService)));
     }
 
     @Override

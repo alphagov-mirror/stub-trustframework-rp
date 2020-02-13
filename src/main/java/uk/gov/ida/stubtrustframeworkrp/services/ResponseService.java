@@ -1,5 +1,6 @@
-package uk.gov.ida.stubtrustframeworkrp.service;
+package uk.gov.ida.stubtrustframeworkrp.services;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.nimbusds.jose.JOSEException;
 import com.nimbusds.jose.crypto.RSASSAVerifier;
 import com.nimbusds.jwt.SignedJWT;
@@ -7,6 +8,7 @@ import net.minidev.json.JSONObject;
 import org.eclipse.jetty.http.HttpStatus;
 import org.glassfish.jersey.internal.util.Base64;
 import uk.gov.ida.stubtrustframeworkrp.configuration.StubTrustframeworkRPConfiguration;
+import uk.gov.ida.stubtrustframeworkrp.dto.OidcResponseBody;
 
 import javax.ws.rs.core.UriBuilder;
 import java.io.IOException;
@@ -22,14 +24,57 @@ import java.security.spec.X509EncodedKeySpec;
 import java.text.ParseException;
 import java.util.Collection;
 import java.util.HashSet;
+import java.util.Map;
 
 public class ResponseService {
 
     private final StubTrustframeworkRPConfiguration configuration;
+    private final RedisService redisService;
 
-    public ResponseService(StubTrustframeworkRPConfiguration configuration) {
+    public ResponseService(StubTrustframeworkRPConfiguration configuration, RedisService redisService) {
         this.configuration = configuration;
+        this.redisService = redisService;
     }
+
+    public String getStateFromSession(String transactionID) {
+        String state = redisService.get(transactionID);
+        if (state == null || state.length() <1) {
+            throw new RuntimeException("State not found in datastore");
+        }
+        return state;
+    }
+
+    public String getNonceFromSession(String state) {
+        String nonce = redisService.get("state::" + state);
+        if (nonce == null || nonce.length() < 1) {
+            throw new RuntimeException("Nonce not found in data store");
+        }
+        return nonce;
+    }
+
+    public String getTransactionIDFromResponse(String responseBody) {
+        Map<String, String> response = QueryParameterHelper.splitQuery(responseBody);
+        return response.get("transactionID");
+    }
+
+    public OidcResponseBody generateOidcResponse(String responseBody, String state, String nonce) {
+        JSONObject jsonObject = new JSONObject();
+        jsonObject.put("oidcResponse", responseBody);
+        jsonObject.put("state", state);
+        jsonObject.put("nonce", nonce);
+
+        OidcResponseBody oidcResponseBody;
+        try {
+            oidcResponseBody = new ObjectMapper()
+                    .readerFor(OidcResponseBody.class)
+                    .readValue(jsonObject.toJSONString());
+        } catch (IOException e) {
+            throw new RuntimeException("Unable to read value when mapping JSON to OidcResponseBody");
+        }
+
+        return oidcResponseBody;
+    }
+
 
     public Collection<String> validateResponse(JSONObject jsonResponse) throws ParseException {
         Collection<String> errors = new HashSet<>();
@@ -49,8 +94,6 @@ public class ResponseService {
 
     //This will be validated by the RP and the logic in the Node app needs to be reversed engineered into here
     private boolean validateVerifiableCredentials(SignedJWT signedJWT) throws ParseException {
-        HttpClient httpClient = HttpClient.newBuilder()
-                .build();
 
         String jsonString = signedJWT.getJWTClaimsSet().toJSONObject().toJSONString().replace("\\", "");
 
@@ -62,7 +105,7 @@ public class ResponseService {
 
         HttpResponse<String> response;
         try {
-            response = httpClient.send(request, HttpResponse.BodyHandlers.ofString());
+            response = HttpClient.newHttpClient().send(request, HttpResponse.BodyHandlers.ofString());
         } catch (IOException | InterruptedException e) {
             throw new RuntimeException(e);
         }
@@ -98,4 +141,5 @@ public class ResponseService {
             throw new RuntimeException(e);
         }
     }
+
 }

@@ -12,6 +12,8 @@ brokerURI: ${BROKER_URI:-"http://localhost:5510"}
 
 usingServiceProvider: ${IS_USING_SERVICE_PROVIDER:-true}
 
+redisURI: ${REDIS_URI:-"redis://192.168.1.4:6380"}
+
 verifiableCredentialsURI: ${VERIFIABLE_CREDENTIALS_URI:-"http://localhost:3002"}
 
 trustframeworkRP: ${TRUSTFRAMEWORK_RP:-"http://localhost:4410"}

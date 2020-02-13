@@ -1,4 +1,4 @@
-package uk.gov.ida.stubtrustframeworkrp.domain;
+package uk.gov.ida.stubtrustframeworkrp.dto;
 
 public class Address {
 
