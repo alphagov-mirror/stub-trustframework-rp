@@ -30,7 +30,7 @@ public class RedisService {
             }
         }
         String databaseNumber;
-        databaseNumber  = ((configuration.getRp() == "dbs") ? "4" : "5");
+        databaseNumber  = (configuration.getRp().equals("dbs") ? "4" : "5");
         RedisClient client = RedisClient.create(redisUri + "/" + databaseNumber);
         LOG.info("REDIS URI" + redisUri);
         commands = client.connect().sync();
