@@ -9,7 +9,7 @@ applications:
     env:
       JAVA_HOME: "../.java-buildpack/open_jdk_jre"
       JBP_CONFIG_OPEN_JDK_JRE: '{ jre: { version: 11.+ } }'
-      SERVICE_PROVIDER_URI: https://trust-framework-service-provider-prototype.cloudapps.digital
+      SERVICE_PROVIDER_URI: https://trust-framework-service-provider-prototype-1.cloudapps.digital
       VERIFIABLE_CREDENTIALS_URI: https://verifiable-credentials-spike.cloudapps.digital
       TRUSTFRAMEWORK_RP: https://stub-trustframework-rp-1.cloudapps.digital
       APPLICATION_PORT: 8080
@@ -24,9 +24,9 @@ applications:
     env:
       JAVA_HOME: "../.java-buildpack/open_jdk_jre"
       JBP_CONFIG_OPEN_JDK_JRE: '{ jre: { version: 11.+ } }'
+      SERVICE_PROVIDER_URI: https://trust-framework-service-provider-prototype-2.cloudapps.digital
       VERIFIABLE_CREDENTIALS_URI: https://verifiable-credentials-spike.cloudapps.digital
       TRUSTFRAMEWORK_RP: https://stub-trustframework-rp-2.cloudapps.digital
-      BROKER_URI: https://stub-oidc-broker-2.cloudapps.digital
-      IS_USING_SERVICE_PROVIDER: false
+      IS_USING_SERVICE_PROVIDER: true
       APPLICATION_PORT: 8080
       RP: dwp
