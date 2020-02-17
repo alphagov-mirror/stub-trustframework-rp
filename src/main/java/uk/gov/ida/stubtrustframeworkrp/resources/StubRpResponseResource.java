@@ -12,6 +12,7 @@ import uk.gov.ida.stubtrustframeworkrp.dto.OidcResponseBody;
 import uk.gov.ida.stubtrustframeworkrp.rest.Urls;
 import uk.gov.ida.stubtrustframeworkrp.services.ResponseService;
 import uk.gov.ida.stubtrustframeworkrp.views.FailedToSignInView;
+import uk.gov.ida.stubtrustframeworkrp.views.FailedToSignUpView;
 import uk.gov.ida.stubtrustframeworkrp.views.IdentityValidatedView;
 import uk.gov.ida.stubtrustframeworkrp.views.InvalidResponseView;
 
@@ -84,6 +85,12 @@ public class StubRpResponseResource {
         return new FailedToSignInView(
                 configuration.getRp(),
                 configuration.getContractedIdpURI());
+    }
+
+    @GET
+    @Path("/failed-to-sign-up")
+    public View FailedToSignUpPage() {
+        return new FailedToSignUpView();
     }
 
     private Address deserializeAddressFromJWT(JSONObject jwtJson) throws IOException, ParseException {
