@@ -8,6 +8,7 @@ export ADMIN_PORT=4413
 export TRUSTFRAMEWORK_RP=http://localhost:4412
 export RP=dwp
 export IS_USING_SERVICE_PROVIDER=true
+export CONTRACTED_IDP_URI=http://localhost:3334/sign-up
 LOCAL_IP="$(ipconfig getifaddr en0)"
 export REDIS_URI="redis://${LOCAL_IP}:6380"
 log="logs/rp2_console.log"

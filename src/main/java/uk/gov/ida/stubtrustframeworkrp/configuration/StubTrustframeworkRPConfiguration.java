@@ -11,6 +11,7 @@ public class StubTrustframeworkRPConfiguration extends Configuration {
     private String brokerURI;
     private boolean usingServiceProvider;
     private String redisURI;
+    private String contractedIdpURI;
 
     public String getServiceProviderURI() {
         return serviceProviderURI;
@@ -38,5 +39,9 @@ public class StubTrustframeworkRPConfiguration extends Configuration {
 
     public String getRedisURI() {
         return redisURI;
+    }
+
+    public String getContractedIdpURI() {
+        return contractedIdpURI;
     }
 }

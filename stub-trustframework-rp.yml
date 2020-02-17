@@ -19,3 +19,5 @@ verifiableCredentialsURI: ${VERIFIABLE_CREDENTIALS_URI:-"http://localhost:3002"}
 trustframeworkRP: ${TRUSTFRAMEWORK_RP:-"http://localhost:4410"}
 
 rp: ${RP:-"dbs"}
+
+contractedIdpURI: ${CONTRACTED_IDP_URI:-"http://localhost:3333/sign-up"}
