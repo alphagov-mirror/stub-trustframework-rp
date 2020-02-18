@@ -52,7 +52,7 @@ public class StubRpResponseResource {
                         configuration.getRp(),
                         configuration.getContractedIdpURI());
             }
-            return new InvalidResponseView(responseMap.get("error"));
+            return new InvalidResponseView(responseMap.get("error") + ": " + responseMap.get("error_description"));
         }
 
         String transactionID = responseService.getTransactionIDFromResponse(responseBody);
