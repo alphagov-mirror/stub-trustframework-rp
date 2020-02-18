@@ -10,6 +10,7 @@ import uk.gov.ida.stubtrustframeworkrp.configuration.StubTrustframeworkRPConfigu
 import uk.gov.ida.stubtrustframeworkrp.dto.Address;
 import uk.gov.ida.stubtrustframeworkrp.dto.OidcResponseBody;
 import uk.gov.ida.stubtrustframeworkrp.rest.Urls;
+import uk.gov.ida.stubtrustframeworkrp.services.QueryParameterHelper;
 import uk.gov.ida.stubtrustframeworkrp.services.ResponseService;
 import uk.gov.ida.stubtrustframeworkrp.views.FailedToSignInView;
 import uk.gov.ida.stubtrustframeworkrp.views.FailedToSignUpView;
@@ -27,6 +28,7 @@ import java.net.http.HttpClient;
 import java.net.http.HttpRequest;
 import java.net.http.HttpResponse;
 import java.text.ParseException;
+import java.util.Map;
 
 @Path("/")
 public class StubRpResponseResource {
@@ -42,6 +44,17 @@ public class StubRpResponseResource {
     @POST
     @Path("/authenticationResponse")
     public View handleAuthenticationResponse(String responseBody) throws ParseException, IOException {
+        if (responseBody.contains("error")) {
+            Map<String, String> responseMap = QueryParameterHelper.splitQuery(responseBody);
+            String error = responseMap.get("error");
+            if (error.equals("unmet_authentication_requirements")) {
+                return new FailedToSignInView(
+                        configuration.getRp(),
+                        configuration.getContractedIdpURI());
+            }
+            return new InvalidResponseView(responseMap.get("error"));
+        }
+
         String transactionID = responseService.getTransactionIDFromResponse(responseBody);
         String state = responseService.getStateFromSession(transactionID);
         String nonce = responseService.getNonceFromSession(state);
@@ -77,14 +90,6 @@ public class StubRpResponseResource {
             return new IdentityValidatedView(configuration.getRp(), address);
         }
         return new InvalidResponseView("Status: " + httpStatus + " with response: " + response);
-    }
-
-    @GET
-    @Path("/failed-to-sign-in")
-    public View FailedToSignInPage() {
-        return new FailedToSignInView(
-                configuration.getRp(),
-                configuration.getContractedIdpURI());
     }
 
     @GET
