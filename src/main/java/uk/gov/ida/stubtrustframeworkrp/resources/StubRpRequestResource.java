@@ -9,6 +9,7 @@ import uk.gov.ida.stubtrustframeworkrp.views.TellUsWhoYouAreView;
 
 import javax.ws.rs.GET;
 import javax.ws.rs.Path;
+import javax.ws.rs.POST;
 import javax.ws.rs.Produces;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
@@ -19,6 +20,9 @@ import java.net.URISyntaxException;
 import java.net.http.HttpClient;
 import java.net.http.HttpRequest;
 import java.net.http.HttpResponse;
+import java.util.Map;
+
+import static uk.gov.ida.stubtrustframeworkrp.services.QueryParameterHelper.splitQuery;
 
 @Path("/")
 public class StubRpRequestResource {
@@ -43,14 +47,15 @@ public class StubRpRequestResource {
         return new TellUsWhoYouAreView();
     }
 
-    @GET
+    @POST
     @Path("/sendRequest")
     @Produces(MediaType.APPLICATION_JSON)
-    public Response sendRequest() throws URISyntaxException {
+    public Response sendRequest(String claimParams) throws URISyntaxException {
         URI uri;
+        Map<String, String> claimRequest = splitQuery(claimParams);
 
         if (configuration.isUsingServiceProvider()) {
-            uri = new URI(generateRequestFromServiceProvider());
+            uri = new URI(generateRequestFromServiceProvider(claimRequest));
             requestService.storeNonceAndState(uri);
         } else {
             URI responseURI = UriBuilder.fromUri(configuration.getTrustframeworkRP()).path(Urls.RP.RESPONSE_URI).build();
@@ -63,8 +68,15 @@ public class StubRpRequestResource {
                 .build();
     }
 
-    private String generateRequestFromServiceProvider() {
-        URI uri = UriBuilder.fromUri(configuration.getServiceProviderURI()).path(Urls.ServiceProvider.REQUEST_URI).build();
+    private String generateRequestFromServiceProvider(Map<String, String> claimRequest) {
+        URI uri = UriBuilder.fromUri(configuration.getServiceProviderURI())
+                                    .path(Urls.ServiceProvider.REQUEST_URI)
+                                    .queryParam("name", claimRequest.get("name"))
+                                    .queryParam("family-name", claimRequest.get("family-name"))
+                                    .queryParam("given-name", claimRequest.get("given-name"))
+                                    .queryParam("middle-name", claimRequest.get("middle-name"))
+                                    .queryParam("birthday", claimRequest.get("birthday"))
+                                    .build();
 
         HttpRequest request = HttpRequest.newBuilder()
                 .GET()
