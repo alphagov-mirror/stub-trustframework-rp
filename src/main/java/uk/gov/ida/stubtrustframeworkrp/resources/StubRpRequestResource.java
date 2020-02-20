@@ -52,10 +52,9 @@ public class StubRpRequestResource {
     @Produces(MediaType.APPLICATION_JSON)
     public Response sendRequest(String claimParams) throws URISyntaxException {
         URI uri;
-        Map<String, String> claimRequest = splitQuery(claimParams);
 
         if (configuration.isUsingServiceProvider()) {
-            uri = new URI(generateRequestFromServiceProvider(claimRequest));
+            uri = new URI(generateRequestFromServiceProvider(claimParams));
             requestService.storeNonceAndState(uri);
         } else {
             URI responseURI = UriBuilder.fromUri(configuration.getTrustframeworkRP()).path(Urls.RP.RESPONSE_URI).build();
@@ -68,18 +67,13 @@ public class StubRpRequestResource {
                 .build();
     }
 
-    private String generateRequestFromServiceProvider(Map<String, String> claimRequest) {
+    private String generateRequestFromServiceProvider(String claimParams) {
         URI uri = UriBuilder.fromUri(configuration.getServiceProviderURI())
                                     .path(Urls.ServiceProvider.REQUEST_URI)
-                                    .queryParam("name", claimRequest.get("name"))
-                                    .queryParam("family-name", claimRequest.get("family-name"))
-                                    .queryParam("given-name", claimRequest.get("given-name"))
-                                    .queryParam("middle-name", claimRequest.get("middle-name"))
-                                    .queryParam("birthday", claimRequest.get("birthday"))
                                     .build();
 
         HttpRequest request = HttpRequest.newBuilder()
-                .GET()
+                .POST(HttpRequest.BodyPublishers.ofString(claimParams))
                 .uri(uri)
                 .build();
 
