@@ -46,6 +46,7 @@
     </div>
 </header>
 
+{{#getHasAddress}}
 <div class="govuk-width-container">
     <main class="govuk-main-wrapper">
 
@@ -107,6 +108,19 @@
 
     </main>
 </div>
+{{/getHasAddress}}
+
+{{#getHasClaimsSet}}
+<ul>
+    {{#getClaimsSet}}
+    <li>{{key}}: {{value}}</li>
+    {{/getClaimsSet}}
+</ul>
+{{/getHasClaimsSet}}
+
+<code>
+{{rawJSON}}
+</code>
 
 <footer class="govuk-footer " role="contentinfo">
     <div class="govuk-width-container ">

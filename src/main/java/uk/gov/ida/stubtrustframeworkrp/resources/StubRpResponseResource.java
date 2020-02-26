@@ -28,6 +28,7 @@ import java.net.http.HttpClient;
 import java.net.http.HttpRequest;
 import java.net.http.HttpResponse;
 import java.text.ParseException;
+import java.util.HashMap;
 import java.util.Map;
 
 @Path("/")
@@ -68,7 +69,14 @@ public class StubRpResponseResource {
         JSONObject jsonObject = SignedJWT.parse(jsonResponse.get("jws").toString()).getJWTClaimsSet().toJSONObject();
         Address address = deserializeAddressFromJWT(jsonObject);
 
-        return new IdentityValidatedView(configuration.getRp(), address);
+        Map<String,String> claims = new HashMap<>();
+        for (String key : jsonObject.keySet()) {
+            String value = jsonObject.get(key).toString();
+            claims.put(key,value);
+        }
+
+        String rawJSON = jsonObject.toJSONString();
+        return new IdentityValidatedView(configuration.getRp(), address, claims, rawJSON);
     }
 
     @POST
@@ -84,10 +92,19 @@ public class StubRpResponseResource {
                 jsonResponse = JSONObjectUtils.parse(response);
                 jsonObject = SignedJWT.parse(jsonResponse.get("jws").toString()).getJWTClaimsSet().toJSONObject();
                 address = deserializeAddressFromJWT(jsonObject);
+
+                Map<String,String> claims = new HashMap<>();
+                for (String key : jsonObject.keySet()) {
+                    String value = jsonObject.get(key).toString();
+                    claims.put(key,value);
+                }
+
+                String rawJSON = jsonObject.toJSONString();
+                return new IdentityValidatedView(configuration.getRp(), address, claims, rawJSON);
+
             } catch (ParseException | IOException e) {
                 return new InvalidResponseView(e.toString());
             }
-            return new IdentityValidatedView(configuration.getRp(), address);
         }
         return new InvalidResponseView("Status: " + httpStatus + " with response: " + response);
     }
@@ -99,6 +116,7 @@ public class StubRpResponseResource {
     }
 
     private Address deserializeAddressFromJWT(JSONObject jwtJson) throws IOException, ParseException {
+        if (!jwtJson.containsKey("vc")) { return null; }
         JSONObject credential = JSONObjectUtils.parse(jwtJson.get("vc").toString());
         JSONObject credentialSubject = JSONObjectUtils.parse(credential.get("credentialSubject").toString());
         JSONObject jsonAddress = JSONObjectUtils.parse(credentialSubject.get("address").toString());
