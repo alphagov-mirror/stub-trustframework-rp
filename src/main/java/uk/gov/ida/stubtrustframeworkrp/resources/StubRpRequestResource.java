@@ -44,7 +44,7 @@ public class StubRpRequestResource {
     @GET
     @Path("/tellUsWhoYouAre")
     public View tellUsWhoYouAre() {
-        return new TellUsWhoYouAreView();
+        return new TellUsWhoYouAreView(configuration.getRp());
     }
 
     @POST

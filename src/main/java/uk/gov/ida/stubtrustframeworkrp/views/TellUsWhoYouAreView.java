@@ -4,7 +4,14 @@ import io.dropwizard.views.View;
 
 public class TellUsWhoYouAreView extends View {
 
-    public TellUsWhoYouAreView() {
+    private String rp;
+
+    public TellUsWhoYouAreView(String rp) {
         super("telluswhoyouare-view.mustache");
+        this.rp = rp;
+    }
+
+    public boolean isDWP() {
+        return rp.equals("dwp");
     }
 }

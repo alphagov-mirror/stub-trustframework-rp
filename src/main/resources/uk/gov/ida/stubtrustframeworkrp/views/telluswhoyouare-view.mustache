@@ -233,13 +233,13 @@
                           <fieldset class="govuk-fieldset">
                             <div class="govuk-radios govuk-radios--small govuk-radios--inline">
                               <div class="govuk-radios__item">
-                                <input class="govuk-radios__input" id="birthday" name="birthday" type="radio" value="">
-                                <label class="govuk-label govuk-radios__label" for="birthday">
+                                <input class="govuk-radios__input" id="birthday-1" name="birthday" type="radio" value="">
+                                <label class="govuk-label govuk-radios__label" for="birthday-1">
                                   Not required
                                 </label>
                               </div>
                               <div class="govuk-radios__item">
-                                <input class="govuk-radios__input" id="birthday" name="birthday" type="radio" value="optional" checked="checked">
+                                <input class="govuk-radios__input" id="birthday-2" name="birthday" type="radio" value="optional" checked="checked">
                                 <label class="govuk-label govuk-radios__label" for="birthday-2">
                                   Optional
                                 </label>
@@ -255,6 +255,41 @@
                         </div>
                       </td>
                     </tr>
+                    {{#isDWP}}
+                    <tr class="govuk-table__row">
+                        <th scope="row" class="govuk-table__header">ATP Attributes</th>
+                    </tr>
+                    <tr class="govuk-table__row">
+                        <th scope="row" class="govuk-table__header"></th>
+                        <td class="govuk-table__cell">ho_positive_verification_notice</td>
+                        <td class="govuk-table__cell">
+                            <div class="govuk-form-group">
+                                <fieldset class="govuk-fieldset">
+                                    <div class="govuk-radios govuk-radios--small govuk-radios--inline">
+                                        <div class="govuk-radios__item">
+                                            <input class="govuk-radios__input" id="ho_positive_verification_notice-1" name="ho_positive_verification_notice" type="radio" value="">
+                                            <label class="govuk-label govuk-radios__label" for="ho_positive_verification_notice-1">
+                                                Not required
+                                            </label>
+                                        </div>
+                                        <div class="govuk-radios__item">
+                                            <input class="govuk-radios__input" id="ho_positive_verification_notice-2" name="ho_positive_verification_notice" type="radio" value="optional" checked="checked">
+                                            <label class="govuk-label govuk-radios__label" for="ho_positive_verification_notice-2">
+                                                Optional
+                                            </label>
+                                        </div>
+                                        <div class="govuk-radios__item">
+                                            <input class="govuk-radios__input" id="ho_positive_verification_notice-3" name="ho_positive_verification_notice" type="radio" value="essential">
+                                            <label class="govuk-label govuk-radios__label" for="ho_positive_verification_notice-3">
+                                                Essential
+                                            </label>
+                                        </div>
+                                    </div>
+                                </fieldset>
+                            </div>
+                        </td>
+                    </tr>
+                  {{/isDWP}}
                   </tbody>
                 </table>
 
