@@ -110,17 +110,106 @@
 </div>
 {{/getHasAddress}}
 
-{{#getHasClaimsSet}}
-<ul>
-    {{#getClaimsSet}}
-    <li>{{key}}: {{value}}</li>
-    {{/getClaimsSet}}
-</ul>
-{{/getHasClaimsSet}}
+{{#hasIdentityAttributes}}
+<div class="govuk-width-container">
+    <main class="govuk-main-wrapper">
 
-<code>
-{{rawJSON}}
-</code>
+        <div class="govuk-grid-row">
+            <div class="govuk-grid-column-two-thirds">
+                <h1 class="govuk-heading-xl">These are the returned attributes</h1>
+            </div>
+        </div>
+        <div class="govuk-grid-row">
+            <div class="govuk-grid-column-two-thirds">
+                <p class="govuk-body">This is a digital identity. Use it wisely</p>
+                <dl class="govuk-summary-list">
+                        {{#identityAttributes.sub}}
+                    <div class="govuk-summary-list__row">
+                        <dt class="govuk-summary-list__key">
+                            Subject
+                        </dt>
+                        <dd class="govuk-summary-list__value">
+                            {{identityAttributes.sub}}
+                        </dd>
+                    </div>
+                        {{/identityAttributes.sub}}
+                        {{#identityAttributes.birthdate}}
+                    <div class="govuk-summary-list__row">
+                        <dt class="govuk-summary-list__key">
+                            Birthdate
+                        </dt>
+                        <dd class="govuk-summary-list__value">
+                            {{identityAttributes.birthdate}}
+                        </dd>
+                    </div>
+                        {{/identityAttributes.birthdate}}
+                        {{#identityAttributes.gender}}
+                    <div class="govuk-summary-list__row">
+                        <dt class="govuk-summary-list__key">
+                            Gender
+                        </dt>
+                        <dd class="govuk-summary-list__value">
+                            {{identityAttributes.gender}}
+                        </dd>
+                    </div>
+                        {{/identityAttributes.gender}}
+                        {{#identityAttributes.name}}
+                    <div class="govuk-summary-list__row">
+
+                        <dt class="govuk-summary-list__key">
+                            Name
+                        </dt>
+                        <dd class="govuk-summary-list__value">
+                            {{identityAttributes.name}}
+                        </dd>
+                    </div>
+                        {{/identityAttributes.name}}
+                        {{#identityAttributes.given_name}}
+                    <div class="govuk-summary-list__row">
+                        <dt class="govuk-summary-list__key">
+                            Given name
+                        </dt>
+                        <dd class="govuk-summary-list__value">
+                            {{identityAttributes.given_name}}
+                        </dd>
+                    </div>
+                        {{/identityAttributes.given_name}}
+                        {{#identityAttributes.middle_name}}
+                    <div class="govuk-summary-list__row">
+                        <dt class="govuk-summary-list__key">
+                            Middle name
+                        </dt>
+                        <dd class="govuk-summary-list__value">
+                            {{identityAttributes.middle_name}}
+                        </dd>
+                    </div>
+                        {{/identityAttributes.middle_name}}
+                        {{#identityAttributes.family_name}}
+                    <div class="govuk-summary-list__row">
+                        <dt class="govuk-summary-list__key">
+                            Family name
+                        </dt>
+                        <dd class="govuk-summary-list__value">
+                            {{identityAttributes.family_name}}
+                        </dd>
+                    </div>
+                        {{/identityAttributes.family_name}}
+                        {{#identityAttributes.ho_positive_verification_notice}}
+                         <div class="govuk-summary-list__row">
+                             <dt class="govuk-summary-list__key">
+                                 Has got Home Office Positive Verification Notice?
+                             </dt>
+                             <dd class="govuk-summary-list__value">
+                                 {{identityAttributes.ho_positive_verification_notice}}
+                             </dd>
+                         </div>
+                        {{/identityAttributes.ho_positive_verification_notice}}
+                </dl>
+            </div>
+        </div>
+    </main>
+</div>
+{{/hasIdentityAttributes}}
 
 <footer class="govuk-footer " role="contentinfo">
     <div class="govuk-width-container ">

@@ -5,9 +5,11 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.nimbusds.jose.util.JSONObjectUtils;
 import com.nimbusds.jwt.SignedJWT;
 import io.dropwizard.views.View;
+import net.minidev.json.JSONArray;
 import net.minidev.json.JSONObject;
 import uk.gov.ida.stubtrustframeworkrp.configuration.StubTrustframeworkRPConfiguration;
 import uk.gov.ida.stubtrustframeworkrp.dto.Address;
+import uk.gov.ida.stubtrustframeworkrp.dto.IdentityAttributes;
 import uk.gov.ida.stubtrustframeworkrp.dto.OidcResponseBody;
 import uk.gov.ida.stubtrustframeworkrp.rest.Urls;
 import uk.gov.ida.stubtrustframeworkrp.services.QueryParameterHelper;
@@ -28,8 +30,11 @@ import java.net.http.HttpClient;
 import java.net.http.HttpRequest;
 import java.net.http.HttpResponse;
 import java.text.ParseException;
+import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
+import java.util.stream.Collectors;
 
 @Path("/")
 public class StubRpResponseResource {
@@ -62,21 +67,24 @@ public class StubRpResponseResource {
         OidcResponseBody oidcResponseBody = new OidcResponseBody(responseBody, state, nonce);
 
         String userCredentials = sendAuthenticationResponseToServiceProvider(oidcResponseBody);
+
         JSONObject jsonResponse = JSONObjectUtils.parse(userCredentials);
         if (jsonResponse.get("jws") == null) {
             return new InvalidResponseView(jsonResponse.toJSONString());
         }
         JSONObject jsonObject = SignedJWT.parse(jsonResponse.get("jws").toString()).getJWTClaimsSet().toJSONObject();
+
+        IdentityAttributes identityAttributes;
+        if (jsonObject.get("claim_names") != null) {
+            identityAttributes = extractAggregatedClaims(jsonObject);
+        } else {
+                ObjectMapper objectMapper = new ObjectMapper();
+                identityAttributes = objectMapper.readValue(jsonObject.toJSONString(), IdentityAttributes.class);
+            }
+
         Address address = deserializeAddressFromJWT(jsonObject);
 
-        Map<String,String> claims = new HashMap<>();
-        for (String key : jsonObject.keySet()) {
-            String value = jsonObject.get(key).toString();
-            claims.put(key,value);
-        }
-
-        String rawJSON = jsonObject.toJSONString();
-        return new IdentityValidatedView(configuration.getRp(), address, claims, rawJSON);
+        return new IdentityValidatedView(configuration.getRp(), address, identityAttributes);
     }
 
     @POST
@@ -100,7 +108,7 @@ public class StubRpResponseResource {
                 }
 
                 String rawJSON = jsonObject.toJSONString();
-                return new IdentityValidatedView(configuration.getRp(), address, claims, rawJSON);
+                return new IdentityValidatedView(configuration.getRp(), address, null);
 
             } catch (ParseException | IOException e) {
                 return new InvalidResponseView(e.toString());
@@ -115,8 +123,63 @@ public class StubRpResponseResource {
         return new FailedToSignUpView();
     }
 
+    private IdentityAttributes extractAggregatedClaims(JSONObject jsonObject) {
+        JSONObject claims = new JSONObject();
+
+        JSONObject claimSources = (JSONObject) jsonObject.get("claim_sources");
+        JSONObject claimNames = (JSONObject) jsonObject.get("claim_names");
+
+//        Will see if it works with aggregated claims  before I refactor it
+//        claimNames.keySet().stream().map(key -> {
+//            String claimName = claimNames.get(key).toString();
+//            JSONObject claimSourceNameJson = (JSONObject) claimSources.get(claimName);
+//            JSONObject jsonKeyKey = parseClaims(claimSourceNameJson);
+//                return jsonKeyKey.keySet().stream().map(t -> {
+//                    String value = jsonKeyKey.get(t).toString();
+//                    return claims.put(t,value);
+//                });
+//        });
+
+        for (String key : claimNames.keySet()) {
+            String claimName = claimNames.get(key).toString();
+            JSONObject claimSourceNameJson = (JSONObject) claimSources.get(claimName);
+            JSONObject jsonClaims;
+            try {
+                jsonClaims = SignedJWT.parse(claimSourceNameJson.get("JWT").toString()).getJWTClaimsSet().toJSONObject();
+            } catch (ParseException e) {
+                throw new RuntimeException(e);
+            }
+            for (String jsonClaimKey : jsonClaims.keySet()) {
+                String value = jsonClaims.get(jsonClaimKey).toString();
+                claims.put(jsonClaimKey,value);
+            }
+        }
+        ObjectMapper objectMapper = new ObjectMapper();
+        IdentityAttributes identityAttributes;
+        try {
+            identityAttributes = objectMapper.readValue(claims.toJSONString(), IdentityAttributes.class);
+        } catch (IOException e) {
+            throw new RuntimeException("Cant map to IdentityAttributes object", e);
+        }
+
+        return identityAttributes;
+    }
+
+    private JSONObject parseClaims(JSONObject jsonObject) {
+        JSONObject jsonClaims;
+        try {
+            jsonClaims = SignedJWT.parse(jsonObject.get("JWT").toString()).getJWTClaimsSet().toJSONObject();
+        } catch (ParseException e) {
+            throw new RuntimeException(e);
+        }
+
+        return jsonClaims;
+    }
+
     private Address deserializeAddressFromJWT(JSONObject jwtJson) throws IOException, ParseException {
-        if (!jwtJson.containsKey("vc")) { return null; }
+        if (!jwtJson.containsKey("vc")) {
+            return null;
+        }
         JSONObject credential = JSONObjectUtils.parse(jwtJson.get("vc").toString());
         JSONObject credentialSubject = JSONObjectUtils.parse(credential.get("credentialSubject").toString());
         JSONObject jsonAddress = JSONObjectUtils.parse(credentialSubject.get("address").toString());
@@ -148,4 +211,5 @@ public class StubRpResponseResource {
         }
         return responseBody.body();
     }
+
 }
