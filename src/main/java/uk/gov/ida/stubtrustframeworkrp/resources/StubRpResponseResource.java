@@ -34,6 +34,8 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
+import java.util.Set;
 import java.util.stream.Collectors;
 
 @Path("/")
@@ -75,7 +77,7 @@ public class StubRpResponseResource {
         JSONObject jsonObject = SignedJWT.parse(jsonResponse.get("jws").toString()).getJWTClaimsSet().toJSONObject();
 
         IdentityAttributes identityAttributes;
-        if (jsonObject.get("claim_names") != null) {
+        if (jsonObject.get("_claim_names") != null) {
             identityAttributes = extractAggregatedClaims(jsonObject);
         } else {
                 ObjectMapper objectMapper = new ObjectMapper();
@@ -107,7 +109,6 @@ public class StubRpResponseResource {
                     claims.put(key,value);
                 }
 
-                String rawJSON = jsonObject.toJSONString();
                 return new IdentityValidatedView(configuration.getRp(), address, null);
 
             } catch (ParseException | IOException e) {
@@ -126,22 +127,15 @@ public class StubRpResponseResource {
     private IdentityAttributes extractAggregatedClaims(JSONObject jsonObject) {
         JSONObject claims = new JSONObject();
 
-        JSONObject claimSources = (JSONObject) jsonObject.get("claim_sources");
-        JSONObject claimNames = (JSONObject) jsonObject.get("claim_names");
+        JSONObject claimSources = (JSONObject) jsonObject.get("_claim_sources");
+        JSONObject claimNames = (JSONObject) jsonObject.get("_claim_names");
 
-//        Will see if it works with aggregated claims  before I refactor it
-//        claimNames.keySet().stream().map(key -> {
-//            String claimName = claimNames.get(key).toString();
-//            JSONObject claimSourceNameJson = (JSONObject) claimSources.get(claimName);
-//            JSONObject jsonKeyKey = parseClaims(claimSourceNameJson);
-//                return jsonKeyKey.keySet().stream().map(t -> {
-//                    String value = jsonKeyKey.get(t).toString();
-//                    return claims.put(t,value);
-//                });
-//        });
+        List<String> distinctClaimNameValues = claimNames.values()
+                .stream().distinct()
+                .map(Object::toString)
+                .collect(Collectors.toList());
 
-        for (String key : claimNames.keySet()) {
-            String claimName = claimNames.get(key).toString();
+        for (String claimName : distinctClaimNameValues) {
             JSONObject claimSourceNameJson = (JSONObject) claimSources.get(claimName);
             JSONObject jsonClaims;
             try {
@@ -154,6 +148,8 @@ public class StubRpResponseResource {
                 claims.put(jsonClaimKey,value);
             }
         }
+
+
         ObjectMapper objectMapper = new ObjectMapper();
         IdentityAttributes identityAttributes;
         try {
@@ -163,17 +159,6 @@ public class StubRpResponseResource {
         }
 
         return identityAttributes;
-    }
-
-    private JSONObject parseClaims(JSONObject jsonObject) {
-        JSONObject jsonClaims;
-        try {
-            jsonClaims = SignedJWT.parse(jsonObject.get("JWT").toString()).getJWTClaimsSet().toJSONObject();
-        } catch (ParseException e) {
-            throw new RuntimeException(e);
-        }
-
-        return jsonClaims;
     }
 
     private Address deserializeAddressFromJWT(JSONObject jwtJson) throws IOException, ParseException {
@@ -186,8 +171,7 @@ public class StubRpResponseResource {
         ObjectMapper objectMapper = new ObjectMapper();
         return objectMapper.readValue(jsonAddress.toJSONString(), Address.class);
     }
-
-
+    
     private String sendAuthenticationResponseToServiceProvider(OidcResponseBody oidcResponseBody) {
         URI uri = UriBuilder.fromUri(configuration.getServiceProviderURI()).path(Urls.ServiceProvider.AUTHN_RESPONSE_URI).build();
 
