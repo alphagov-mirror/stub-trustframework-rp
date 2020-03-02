@@ -3,8 +3,6 @@ package uk.gov.ida.stubtrustframeworkrp.dto;
 
 public class IdentityAttributes {
 
-    private String sub;
-
     private String birthdate;
 
     private String gender;
@@ -21,10 +19,6 @@ public class IdentityAttributes {
 
 
     public IdentityAttributes() {
-    }
-
-    public String getSub() {
-        return sub;
     }
 
     public String getBirthdate() {

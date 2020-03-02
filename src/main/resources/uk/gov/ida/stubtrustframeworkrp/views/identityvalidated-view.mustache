@@ -123,36 +123,6 @@
             <div class="govuk-grid-column-two-thirds">
                 <p class="govuk-body">This is a digital identity. Use it wisely</p>
                 <dl class="govuk-summary-list">
-                        {{#identityAttributes.sub}}
-                    <div class="govuk-summary-list__row">
-                        <dt class="govuk-summary-list__key">
-                            Subject
-                        </dt>
-                        <dd class="govuk-summary-list__value">
-                            {{identityAttributes.sub}}
-                        </dd>
-                    </div>
-                        {{/identityAttributes.sub}}
-                        {{#identityAttributes.birthdate}}
-                    <div class="govuk-summary-list__row">
-                        <dt class="govuk-summary-list__key">
-                            Birthdate
-                        </dt>
-                        <dd class="govuk-summary-list__value">
-                            {{identityAttributes.birthdate}}
-                        </dd>
-                    </div>
-                        {{/identityAttributes.birthdate}}
-                        {{#identityAttributes.gender}}
-                    <div class="govuk-summary-list__row">
-                        <dt class="govuk-summary-list__key">
-                            Gender
-                        </dt>
-                        <dd class="govuk-summary-list__value">
-                            {{identityAttributes.gender}}
-                        </dd>
-                    </div>
-                        {{/identityAttributes.gender}}
                         {{#identityAttributes.name}}
                     <div class="govuk-summary-list__row">
 
@@ -164,6 +134,16 @@
                         </dd>
                     </div>
                         {{/identityAttributes.name}}
+                        {{#identityAttributes.birthdate}}
+                        <div class="govuk-summary-list__row">
+                            <dt class="govuk-summary-list__key">
+                                Birthdate
+                            </dt>
+                            <dd class="govuk-summary-list__value">
+                                {{identityAttributes.birthdate}}
+                            </dd>
+                        </div>
+                        {{/identityAttributes.birthdate}}
                         {{#identityAttributes.given_name}}
                     <div class="govuk-summary-list__row">
                         <dt class="govuk-summary-list__key">
@@ -194,10 +174,20 @@
                         </dd>
                     </div>
                         {{/identityAttributes.family_name}}
+                        {{#identityAttributes.gender}}
+                        <div class="govuk-summary-list__row">
+                            <dt class="govuk-summary-list__key">
+                                Gender
+                            </dt>
+                            <dd class="govuk-summary-list__value">
+                                {{identityAttributes.gender}}
+                            </dd>
+                        </div>
+                        {{/identityAttributes.gender}}
                         {{#identityAttributes.ho_positive_verification_notice}}
                          <div class="govuk-summary-list__row">
                              <dt class="govuk-summary-list__key">
-                                 Has got Home Office Positive Verification Notice?
+                                 Home Office Positive Verification Notice?
                              </dt>
                              <dd class="govuk-summary-list__value">
                                  {{identityAttributes.ho_positive_verification_notice}}
