@@ -70,7 +70,14 @@ public class StubRpResponseResource {
         if (jsonResponse.get("jws") == null) {
             return new InvalidResponseView(jsonResponse.toJSONString());
         }
-        JSONObject jsonObject = SignedJWT.parse(jsonResponse.get("jws").toString()).getJWTClaimsSet().toJSONObject();
+        SignedJWT brokerJWT = SignedJWT.parse(jsonResponse.get("jws").toString());
+
+        boolean validSignature = responseService.validateSignatureOfJWT(brokerJWT, "broker", brokerJWT.getJWTClaimsSet().getIssuer());
+
+        if (!validSignature) {
+            return new InvalidResponseView("Invalid signature of Broker JWT");
+        }
+        JSONObject jsonObject = brokerJWT.getJWTClaimsSet().toJSONObject();
 
         IdentityAttributes identityAttributes;
         if (jsonObject.get("_claim_names") != null) {
@@ -135,7 +142,13 @@ public class StubRpResponseResource {
             JSONObject claimSourceNameJson = (JSONObject) claimSources.get(distinctClaimName);
             JSONObject jsonClaims;
             try {
-                jsonClaims = SignedJWT.parse(claimSourceNameJson.get("JWT").toString()).getJWTClaimsSet().toJSONObject();
+                SignedJWT signedJWT = SignedJWT.parse(claimSourceNameJson.get("JWT").toString());
+                boolean validSignature = responseService
+                        .validateSignatureOfJWT(signedJWT, "idp", signedJWT.getJWTClaimsSet().getIssuer());
+                if (!validSignature) {
+                    throw new RuntimeException("Invalid Signature ahhhhh");
+                }
+                jsonClaims = signedJWT.getJWTClaimsSet().toJSONObject();
             } catch (ParseException e) {
                 throw new RuntimeException(e);
             }

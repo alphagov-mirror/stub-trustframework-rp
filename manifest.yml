@@ -15,6 +15,7 @@ applications:
       APPLICATION_PORT: 8080
       IS_USING_SERVICE_PROVIDER: true
       CONTRACTED_IDP_URI: https://trust-framework-idp-1.cloudapps.digital/sign-up
+      DIRECTORY_URI: https://directory-prototype.cloudapps.digital
       RP: dbs
   - name: stub-trustframework-rp-2
     path: build/distributions/stub-trustframework-rp.zip
@@ -31,4 +32,5 @@ applications:
       IS_USING_SERVICE_PROVIDER: true
       APPLICATION_PORT: 8080
       CONTRACTED_IDP_URI: https://trust-framework-idp-2.cloudapps.digital/sign-up
+      DIRECTORY_URI: https://directory-prototype.cloudapps.digital
       RP: dwp

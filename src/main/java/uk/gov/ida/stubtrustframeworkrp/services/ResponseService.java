@@ -3,6 +3,7 @@ package uk.gov.ida.stubtrustframeworkrp.services;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.nimbusds.jose.JOSEException;
 import com.nimbusds.jose.crypto.RSASSAVerifier;
+import com.nimbusds.jose.util.JSONObjectUtils;
 import com.nimbusds.jwt.SignedJWT;
 import net.minidev.json.JSONObject;
 import org.eclipse.jetty.http.HttpStatus;
@@ -11,13 +12,19 @@ import uk.gov.ida.stubtrustframeworkrp.configuration.StubTrustframeworkRPConfigu
 import uk.gov.ida.stubtrustframeworkrp.dto.OidcResponseBody;
 
 import javax.ws.rs.core.UriBuilder;
+import java.io.ByteArrayInputStream;
 import java.io.IOException;
+import java.io.InputStream;
+import java.net.URI;
 import java.net.http.HttpClient;
 import java.net.http.HttpRequest;
 import java.net.http.HttpResponse;
 import java.security.KeyFactory;
 import java.security.NoSuchAlgorithmException;
 import java.security.PublicKey;
+import java.security.cert.CertificateException;
+import java.security.cert.CertificateFactory;
+import java.security.cert.X509Certificate;
 import java.security.interfaces.RSAPublicKey;
 import java.security.spec.InvalidKeySpecException;
 import java.security.spec.X509EncodedKeySpec;
@@ -75,7 +82,6 @@ public class ResponseService {
         return oidcResponseBody;
     }
 
-
     public Collection<String> validateResponse(JSONObject jsonResponse) throws ParseException {
         Collection<String> errors = new HashSet<>();
 
@@ -116,6 +122,41 @@ public class ResponseService {
         return false;
     }
 
+    public boolean validateSignatureOfJWT(SignedJWT signedJWT, String component, String issuer) {
+        URI directoryEndpoint = UriBuilder.fromUri(configuration.getDirectoryURI()).path("organisation").path(component).path(issuer).path("certificate/signing").build();
+        PublicKey publicKey = getPublicKeyFromDirectory(directoryEndpoint);
+        boolean validSignature = validateJWTSignature(publicKey, signedJWT);
+
+        return validSignature;
+    }
+
+    private PublicKey getPublicKeyFromDirectory(URI directoryEndpoint) {
+        HttpResponse<String> response = sendHttpRequest(directoryEndpoint);
+
+        String responseString = response.body();
+
+        JSONObject jsonResponse;
+        try {
+            jsonResponse = JSONObjectUtils.parse(responseString);
+        } catch (ParseException e) {
+            throw new RuntimeException(e);
+        }
+        responseString = jsonResponse.get("signing").toString();
+
+        responseString = responseString.replaceAll("\\n", "").replace("-----BEGIN CERTIFICATE-----", "").replace("-----END CERTIFICATE-----", "");
+        byte[] encodedPublicKey = Base64.decode(responseString.getBytes());
+
+        X509Certificate cert;
+        try {
+            CertificateFactory cf = CertificateFactory.getInstance("X.509");
+            InputStream in = new ByteArrayInputStream(encodedPublicKey);
+            cert = (X509Certificate) cf.generateCertificate(in);
+            return cert.getPublicKey();
+        } catch (CertificateException e) {
+            throw new RuntimeException(e);
+        }
+    }
+
     private boolean validateJWTSignature(PublicKey publicKey, SignedJWT signedJWT) {
         RSASSAVerifier verifier = new RSASSAVerifier((RSAPublicKey) publicKey);
         boolean isVerified;
@@ -142,4 +183,17 @@ public class ResponseService {
         }
     }
 
+    private HttpResponse<String> sendHttpRequest(URI uri) {
+        HttpRequest request = HttpRequest.newBuilder()
+                .GET()
+                .uri(uri)
+                .build();
+
+        try {
+            return HttpClient.newHttpClient().send(request, HttpResponse.BodyHandlers.ofString());
+        } catch (IOException | InterruptedException e) {
+
+            throw new RuntimeException(e);
+        }
+    }
 }
