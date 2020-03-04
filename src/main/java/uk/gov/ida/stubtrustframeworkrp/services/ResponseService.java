@@ -45,7 +45,7 @@ public class ResponseService {
 
     public String getStateFromSession(String transactionID) {
         String state = redisService.get(transactionID);
-        if (state == null || state.length() <1) {
+        if (state == null || state.length() < 1) {
             throw new RuntimeException("State not found in datastore");
         }
         return state;
@@ -64,22 +64,68 @@ public class ResponseService {
         return response.get("transactionID");
     }
 
-    public OidcResponseBody generateOidcResponse(String responseBody, String state, String nonce) {
-        JSONObject jsonObject = new JSONObject();
-        jsonObject.put("oidcResponse", responseBody);
-        jsonObject.put("state", state);
-        jsonObject.put("nonce", nonce);
+    public boolean validateSignatureOfJWT(SignedJWT signedJWT, String component, String issuer) {
+        URI directoryEndpoint = UriBuilder.fromUri(configuration.getDirectoryURI()).path("organisation").path(component).path(issuer).path("certificate/signing").build();
+        PublicKey publicKey = getPublicKeyFromDirectory(directoryEndpoint);
+        boolean validSignature = validateJWTSignature(publicKey, signedJWT);
 
-        OidcResponseBody oidcResponseBody;
+        return validSignature;
+    }
+
+    private PublicKey getPublicKeyFromDirectory(URI directoryEndpoint) {
+        HttpResponse<String> response = sendHttpRequest(directoryEndpoint);
+
+        String responseString = response.body();
+
+        JSONObject jsonResponse;
         try {
-            oidcResponseBody = new ObjectMapper()
-                    .readerFor(OidcResponseBody.class)
-                    .readValue(jsonObject.toJSONString());
-        } catch (IOException e) {
-            throw new RuntimeException("Unable to read value when mapping JSON to OidcResponseBody");
+            jsonResponse = JSONObjectUtils.parse(responseString);
+        } catch (ParseException e) {
+            throw new RuntimeException(e);
         }
+        responseString = jsonResponse.get("signing").toString();
 
-        return oidcResponseBody;
+        responseString = responseString.replaceAll("\\n", "")
+                .replace("-----BEGIN CERTIFICATE-----", "")
+                .replace("-----END CERTIFICATE-----", "");
+
+        byte[] encodedPublicKey = Base64.decode(responseString.getBytes());
+
+        X509Certificate cert;
+        try {
+            CertificateFactory cf = CertificateFactory.getInstance("X.509");
+            InputStream in = new ByteArrayInputStream(encodedPublicKey);
+            cert = (X509Certificate) cf.generateCertificate(in);
+            return cert.getPublicKey();
+        } catch (CertificateException e) {
+            throw new RuntimeException(e);
+        }
+    }
+
+    private boolean validateJWTSignature(PublicKey publicKey, SignedJWT signedJWT) {
+        RSASSAVerifier verifier = new RSASSAVerifier((RSAPublicKey) publicKey);
+        boolean isVerified;
+
+        try {
+            isVerified = signedJWT.verify(verifier);
+        } catch (JOSEException e) {
+            throw new RuntimeException(e);
+        }
+        return isVerified;
+    }
+
+    private HttpResponse<String> sendHttpRequest(URI uri) {
+        HttpRequest request = HttpRequest.newBuilder()
+                .GET()
+                .uri(uri)
+                .build();
+
+        try {
+            return HttpClient.newHttpClient().send(request, HttpResponse.BodyHandlers.ofString());
+        } catch (IOException | InterruptedException e) {
+
+            throw new RuntimeException(e);
+        }
     }
 
     public Collection<String> validateResponse(JSONObject jsonResponse) throws ParseException {
@@ -122,56 +168,28 @@ public class ResponseService {
         return false;
     }
 
-    public boolean validateSignatureOfJWT(SignedJWT signedJWT, String component, String issuer) {
-        URI directoryEndpoint = UriBuilder.fromUri(configuration.getDirectoryURI()).path("organisation").path(component).path(issuer).path("certificate/signing").build();
-        PublicKey publicKey = getPublicKeyFromDirectory(directoryEndpoint);
-        boolean validSignature = validateJWTSignature(publicKey, signedJWT);
+    public OidcResponseBody generateOidcResponse(String responseBody, String state, String nonce) {
+        JSONObject jsonObject = new JSONObject();
+        jsonObject.put("oidcResponse", responseBody);
+        jsonObject.put("state", state);
+        jsonObject.put("nonce", nonce);
 
-        return validSignature;
-    }
-
-    private PublicKey getPublicKeyFromDirectory(URI directoryEndpoint) {
-        HttpResponse<String> response = sendHttpRequest(directoryEndpoint);
-
-        String responseString = response.body();
-
-        JSONObject jsonResponse;
+        OidcResponseBody oidcResponseBody;
         try {
-            jsonResponse = JSONObjectUtils.parse(responseString);
-        } catch (ParseException e) {
-            throw new RuntimeException(e);
-        }
-        responseString = jsonResponse.get("signing").toString();
-
-        responseString = responseString.replaceAll("\\n", "").replace("-----BEGIN CERTIFICATE-----", "").replace("-----END CERTIFICATE-----", "");
-        byte[] encodedPublicKey = Base64.decode(responseString.getBytes());
-
-        X509Certificate cert;
-        try {
-            CertificateFactory cf = CertificateFactory.getInstance("X.509");
-            InputStream in = new ByteArrayInputStream(encodedPublicKey);
-            cert = (X509Certificate) cf.generateCertificate(in);
-            return cert.getPublicKey();
-        } catch (CertificateException e) {
-            throw new RuntimeException(e);
-        }
-    }
-
-    private boolean validateJWTSignature(PublicKey publicKey, SignedJWT signedJWT) {
-        RSASSAVerifier verifier = new RSASSAVerifier((RSAPublicKey) publicKey);
-        boolean isVerified;
-
-        try {
-            isVerified = signedJWT.verify(verifier);
-        } catch (JOSEException e) {
-            throw new RuntimeException(e);
+            oidcResponseBody = new ObjectMapper()
+                    .readerFor(OidcResponseBody.class)
+                    .readValue(jsonObject.toJSONString());
+        } catch (IOException e) {
+            throw new RuntimeException("Unable to read value when mapping JSON to OidcResponseBody");
         }
 
-        return isVerified;
+        return oidcResponseBody;
     }
 
     private PublicKey getPublicKeyFromString(String publicKey) {
-        publicKey = publicKey.replaceAll("\\n", "").replace("-----BEGIN PUBLIC KEY-----", "").replace("-----END PUBLIC KEY-----", "");
+        publicKey = publicKey.replaceAll("\\n", "")
+                .replace("-----BEGIN PUBLIC KEY-----", "")
+                .replace("-----END PUBLIC KEY-----", "");
         byte[] encodedPublicKey = Base64.decode(publicKey.getBytes());
 
         try {
@@ -179,20 +197,6 @@ public class ResponseService {
             KeyFactory kf = KeyFactory.getInstance("RSA");
             return kf.generatePublic(x509publicKey);
         } catch (InvalidKeySpecException | NoSuchAlgorithmException e) {
-            throw new RuntimeException(e);
-        }
-    }
-
-    private HttpResponse<String> sendHttpRequest(URI uri) {
-        HttpRequest request = HttpRequest.newBuilder()
-                .GET()
-                .uri(uri)
-                .build();
-
-        try {
-            return HttpClient.newHttpClient().send(request, HttpResponse.BodyHandlers.ofString());
-        } catch (IOException | InterruptedException e) {
-
             throw new RuntimeException(e);
         }
     }

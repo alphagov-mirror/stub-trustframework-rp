@@ -72,7 +72,8 @@ public class StubRpResponseResource {
         }
         SignedJWT brokerJWT = SignedJWT.parse(jsonResponse.get("jws").toString());
 
-        boolean validSignature = responseService.validateSignatureOfJWT(brokerJWT, "broker", brokerJWT.getJWTClaimsSet().getIssuer());
+        boolean validSignature = responseService.validateSignatureOfJWT(
+                brokerJWT, "broker", brokerJWT.getJWTClaimsSet().getIssuer());
 
         if (!validSignature) {
             return new InvalidResponseView("Invalid signature of Broker JWT");
@@ -187,7 +188,9 @@ public class StubRpResponseResource {
     }
 
     private String sendAuthenticationResponseToServiceProvider(OidcResponseBody oidcResponseBody) {
-        URI uri = UriBuilder.fromUri(configuration.getServiceProviderURI()).path(Urls.ServiceProvider.AUTHN_RESPONSE_URI).build();
+        URI uri = UriBuilder.fromUri(configuration.getServiceProviderURI())
+                .path(Urls.ServiceProvider.AUTHN_RESPONSE_URI)
+                .build();
 
         ObjectMapper objectMapper = new ObjectMapper();
         String oidcResponseToString;
@@ -209,5 +212,4 @@ public class StubRpResponseResource {
         }
         return responseBody.body();
     }
-
 }
