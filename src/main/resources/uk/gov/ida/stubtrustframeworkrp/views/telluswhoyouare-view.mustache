@@ -256,10 +256,10 @@
                       </td>
                     </tr>
                     {{#isDWP}}
-                    <tr class="govuk-table__row">
+                      <tr class="govuk-table__row">
                         <th scope="row" class="govuk-table__header">ATP Attributes</th>
-                    </tr>
-                    <tr class="govuk-table__row">
+                      </tr>
+                      <tr class="govuk-table__row">
                         <th scope="row" class="govuk-table__header"></th>
                         <td class="govuk-table__cell">ho_positive_verification_notice</td>
                         <td class="govuk-table__cell">
@@ -288,6 +288,41 @@
                                 </fieldset>
                             </div>
                         </td>
+                      </tr>
+                  {{/isDWP}}
+                  {{^isDWP}}
+                    <tr class="govuk-table__row">
+                      <th scope="row" class="govuk-table__header">ATP Attributes</th>
+                    </tr>
+                    <tr class="govuk-table__row">
+                      <th scope="row" class="govuk-table__header"></th>
+                      <td class="govuk-table__cell">bank_account_number</td>
+                      <td class="govuk-table__cell">
+                          <div class="govuk-form-group">
+                              <fieldset class="govuk-fieldset">
+                                  <div class="govuk-radios govuk-radios--small govuk-radios--inline">
+                                      <div class="govuk-radios__item">
+                                          <input class="govuk-radios__input" id="bank_account_number-1" name="bank_account_number" type="radio" value="">
+                                          <label class="govuk-label govuk-radios__label" for="bank_account_number-1">
+                                              Not required
+                                          </label>
+                                      </div>
+                                      <div class="govuk-radios__item">
+                                          <input class="govuk-radios__input" id="bank_account_number-2" name="bank_account_number" type="radio" value="optional" checked="checked">
+                                          <label class="govuk-label govuk-radios__label" for="bank_account_number-2">
+                                              Optional
+                                          </label>
+                                      </div>
+                                      <div class="govuk-radios__item">
+                                          <input class="govuk-radios__input" id="bank_account_number-3" name="bank_account_number" type="radio" value="essential">
+                                          <label class="govuk-label govuk-radios__label" for="bank_account_number-3">
+                                              Essential
+                                          </label>
+                                      </div>
+                                  </div>
+                              </fieldset>
+                          </div>
+                      </td>
                     </tr>
                   {{/isDWP}}
                   </tbody>

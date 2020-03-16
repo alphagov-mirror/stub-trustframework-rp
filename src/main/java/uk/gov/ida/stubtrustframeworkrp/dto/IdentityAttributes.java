@@ -16,6 +16,7 @@ public class IdentityAttributes {
     private String family_name;
 
     private String ho_positive_verification_notice;
+    private String bank_account_number;
 
 
     public IdentityAttributes() {
@@ -47,5 +48,9 @@ public class IdentityAttributes {
 
     public String getHo_positive_verification_notice() {
         return ho_positive_verification_notice;
+    }
+
+    public String getBank_account_number() {
+        return bank_account_number;
     }
 }

@@ -194,6 +194,16 @@
                              </dd>
                          </div>
                         {{/identityAttributes.ho_positive_verification_notice}}
+                        {{#identityAttributes.bank_account_number}}
+                         <div class="govuk-summary-list__row">
+                             <dt class="govuk-summary-list__key">
+                                 Bank Account Number
+                             </dt>
+                             <dd class="govuk-summary-list__value">
+                                 {{identityAttributes.bank_account_number}}
+                             </dd>
+                         </div>
+                        {{/identityAttributes.bank_account_number}}
                 </dl>
             </div>
         </div>
