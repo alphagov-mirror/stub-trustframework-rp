@@ -73,7 +73,7 @@ public class StubRpResponseResource {
         SignedJWT brokerJWT = SignedJWT.parse(jsonResponse.get("jws").toString());
 
         boolean validSignature = responseService.validateSignatureOfJWT(
-                brokerJWT, "broker", brokerJWT.getJWTClaimsSet().getIssuer());
+                brokerJWT, "broker", brokerJWT.getHeader().getKeyID());
 
         if (!validSignature) {
             return new InvalidResponseView("Invalid signature of Broker JWT");
@@ -81,16 +81,20 @@ public class StubRpResponseResource {
         JSONObject jsonObject = brokerJWT.getJWTClaimsSet().toJSONObject();
 
         IdentityAttributes identityAttributes;
-        if (jsonObject.get("_claim_names") != null) {
+        if(jsonObject.get("_claim_names") != null && jsonObject.get("_claim_names").toString().contains("verified_claims")) {
+            identityAttributes = extractAggregatedClaimsForVC(jsonObject);
+        }
+        else if (jsonObject.get("_claim_names") != null) {
             identityAttributes = extractAggregatedClaims(jsonObject);
-        } else {
+        }
+         else {
                 ObjectMapper objectMapper = new ObjectMapper();
                 identityAttributes = objectMapper.readValue(jsonObject.toJSONString(), IdentityAttributes.class);
             }
 
         Address address = deserializeAddressFromJWT(jsonObject);
 
-        return new IdentityValidatedView(configuration.getRp(), address, identityAttributes);
+        return new IdentityValidatedView(identityAttributes);
     }
 
     @POST
@@ -126,6 +130,66 @@ public class StubRpResponseResource {
     @Path("/failed-to-sign-up")
     public View FailedToSignUpPage() {
         return new FailedToSignUpView();
+    }
+
+    private IdentityAttributes extractAggregatedClaimsForVC(JSONObject jsonObject) {
+        JSONObject claims = new JSONObject();
+        JSONObject addressJsonObject;
+
+        IdentityAttributes identityAttributes;
+        JSONObject claimSources = (JSONObject) jsonObject.get("_claim_sources");
+        JSONObject claimNames = (JSONObject) jsonObject.get("_claim_names");
+
+        List<String> distinctClaimNameValues = claimNames.values()
+                .stream().distinct()
+                .map(Object::toString)
+                .collect(Collectors.toList());
+
+        for (String distinctClaimName : distinctClaimNameValues) {
+            JSONObject claimSourceNameJson = (JSONObject) claimSources.get(distinctClaimName);
+            JSONObject jsonClaims;
+            try {
+                SignedJWT signedJWT = SignedJWT.parse(claimSourceNameJson.get("JWT").toString());
+                jsonClaims = signedJWT.getJWTClaimsSet().toJSONObject();
+                boolean validSignature = responseService
+                        .validateSignatureOfJWT(signedJWT, "idp", signedJWT.getHeader().getKeyID());
+                if (!validSignature) {
+                    throw new RuntimeException("Invalid Signature ahhhhh");
+                }
+
+                if (jsonClaims.containsKey("vc")) {
+                    try {
+                        JSONObject credential = JSONObjectUtils.parse(jsonClaims.get("vc").toString());
+                        JSONObject credentialSubject = JSONObjectUtils.parse(credential.get("credentialSubject").toString());
+                        addressJsonObject = (JSONObject) credentialSubject.get("address");
+                        claims.put("address", addressJsonObject);
+                    } catch (ParseException e) {
+                        throw new RuntimeException(e);
+                    }
+                } else {
+                    List<String> claimsInJWT = claimNames.entrySet()
+                            .stream()
+                            .filter(t -> t.getValue().equals(distinctClaimName))
+                            .map(a -> a.getKey())
+                            .collect(Collectors.toList());
+
+                    for (String jsonClaimKey : claimsInJWT) {
+                        String value = jsonClaims.get(jsonClaimKey).toString();
+                        claims.put(jsonClaimKey,value);
+                    }
+                }
+            } catch (ParseException e) {
+                throw new RuntimeException(e);
+            }
+        }
+
+        ObjectMapper objectMapper = new ObjectMapper();
+        try {
+            identityAttributes = objectMapper.readValue(claims.toJSONString(), IdentityAttributes.class);
+        } catch (IOException e) {
+            throw new RuntimeException("Cant map to IdentityAttributes object", e);
+        }
+        return identityAttributes;
     }
 
     private IdentityAttributes extractAggregatedClaims(JSONObject jsonObject) {

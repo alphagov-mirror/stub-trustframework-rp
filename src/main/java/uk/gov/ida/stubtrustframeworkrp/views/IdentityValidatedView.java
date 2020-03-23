@@ -19,6 +19,11 @@ public class IdentityValidatedView extends View {
         this.identityAttributes = identityAttributes;
     }
 
+    public IdentityValidatedView(IdentityAttributes identityAttributes) {
+        super("identityvalidated-view.mustache");
+        this.identityAttributes = identityAttributes;
+    }
+
     public IdentityAttributes getIdentityAttributes() {
         return identityAttributes;
     }
