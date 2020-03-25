@@ -81,16 +81,16 @@ public class StubRpResponseResource {
         JSONObject jsonObject = brokerJWT.getJWTClaimsSet().toJSONObject();
 
         IdentityAttributes identityAttributes;
-        if(jsonObject.get("_claim_names") != null && jsonObject.get("_claim_names").toString().contains("verified_claims")) {
+        if (jsonObject.get("_claim_names") != null && jsonObject.get("_claim_names").toString().contains("verified_claims")) {
             identityAttributes = extractAggregatedClaimsForVC(jsonObject);
-        }
-        else if (jsonObject.get("_claim_names") != null) {
+        } else if (jsonObject.containsKey("vp")) {
+            identityAttributes = parseVerifiablePresentation(jsonObject);
+        } else if (jsonObject.get("_claim_names") != null) {
             identityAttributes = extractAggregatedClaims(jsonObject);
+        } else {
+            ObjectMapper objectMapper = new ObjectMapper();
+            identityAttributes = objectMapper.readValue(jsonObject.toJSONString(), IdentityAttributes.class);
         }
-         else {
-                ObjectMapper objectMapper = new ObjectMapper();
-                identityAttributes = objectMapper.readValue(jsonObject.toJSONString(), IdentityAttributes.class);
-            }
 
         Address address = deserializeAddressFromJWT(jsonObject);
 
@@ -111,10 +111,10 @@ public class StubRpResponseResource {
                 jsonObject = SignedJWT.parse(jsonResponse.get("jws").toString()).getJWTClaimsSet().toJSONObject();
                 address = deserializeAddressFromJWT(jsonObject);
 
-                Map<String,String> claims = new HashMap<>();
+                Map<String, String> claims = new HashMap<>();
                 for (String key : jsonObject.keySet()) {
                     String value = jsonObject.get(key).toString();
-                    claims.put(key,value);
+                    claims.put(key, value);
                 }
 
                 return new IdentityValidatedView(configuration.getRp(), address, null);
@@ -175,9 +175,50 @@ public class StubRpResponseResource {
 
                     for (String jsonClaimKey : claimsInJWT) {
                         String value = jsonClaims.get(jsonClaimKey).toString();
-                        claims.put(jsonClaimKey,value);
+                        claims.put(jsonClaimKey, value);
                     }
                 }
+            } catch (ParseException e) {
+                throw new RuntimeException(e);
+            }
+        }
+
+        ObjectMapper objectMapper = new ObjectMapper();
+        try {
+            identityAttributes = objectMapper.readValue(claims.toJSONString(), IdentityAttributes.class);
+        } catch (IOException e) {
+            throw new RuntimeException("Cant map to IdentityAttributes object", e);
+        }
+        return identityAttributes;
+    }
+
+
+    private IdentityAttributes parseVerifiablePresentation(JSONObject jsonObject) {
+        JSONObject claims = new JSONObject();
+        IdentityAttributes identityAttributes;
+        JSONObject verifiablePresentation = (JSONObject) jsonObject.get("vp");
+        List<String> verifiableCredentialList = (List<String>) verifiablePresentation.get("verifiableCredential");
+
+        for (String vc : verifiableCredentialList) {
+            try {
+                SignedJWT signedJWT = SignedJWT.parse(vc);
+                boolean validSignature = responseService
+                        .validateSignatureOfJWT(signedJWT, "idp", signedJWT.getJWTClaimsSet().getIssuer());
+                if (!validSignature) {
+                    throw new RuntimeException("Invalid Signature ahhhhh");
+                }
+                JSONObject jsonClaims = signedJWT.getJWTClaimsSet().toJSONObject();
+                JSONObject credential = JSONObjectUtils.parse(jsonClaims.get("vc").toString());
+                JSONObject credentialSubject = JSONObjectUtils.parse(credential.get("credentialSubject").toString());
+                if (credentialSubject.containsKey("address")) {
+                    claims.put("address", credentialSubject.get("address"));
+                } else if (credentialSubject.containsKey("ho_positive_verification_notice")) {
+                    claims.put("ho_positive_verification_notice", credentialSubject.containsKey("ho_positive_verification_notice"));
+                } else if (credentialSubject.containsKey("bankAccount")) {
+                    JSONObject bankAccount = (JSONObject) credentialSubject.get("bankAccount");
+                    claims.put("bank_account_number", bankAccount.get("bank_account_number"));
+                }
+
             } catch (ParseException e) {
                 throw new RuntimeException(e);
             }
@@ -226,7 +267,7 @@ public class StubRpResponseResource {
 
             for (String jsonClaimKey : claimsInJWT) {
                 String value = jsonClaims.get(jsonClaimKey).toString();
-                claims.put(jsonClaimKey,value);
+                claims.put(jsonClaimKey, value);
             }
         }
 
