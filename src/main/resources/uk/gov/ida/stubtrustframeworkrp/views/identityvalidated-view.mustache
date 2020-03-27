@@ -194,6 +194,16 @@
                              </dd>
                          </div>
                         {{/identityAttributes.ho_positive_verification_notice}}
+                        {{#identityAttributes.address_covers_5_years}}
+                        <div class="govuk-summary-list__row">
+                            <dt class="govuk-summary-list__key">
+                                Has 5 year address history?
+                            </dt>
+                            <dd class="govuk-summary-list__value">
+                                {{identityAttributes.address_covers_5_years}}
+                            </dd>
+                        </div>
+                        {{/identityAttributes.address_covers_5_years}}
                         {{#identityAttributes.bank_account_number}}
                          <div class="govuk-summary-list__row">
                              <dt class="govuk-summary-list__key">

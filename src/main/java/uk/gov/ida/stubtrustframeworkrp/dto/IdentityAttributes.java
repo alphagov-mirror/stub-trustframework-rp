@@ -21,6 +21,8 @@ public class IdentityAttributes {
 
     private String bank_account_number;
 
+    private String address_covers_5_years;
+
     public IdentityAttributes() {
     }
 
@@ -58,5 +60,9 @@ public class IdentityAttributes {
 
     public Address getAddress() {
         return address;
+    }
+
+    public String getAddress_covers_5_years() {
+        return address_covers_5_years;
     }
 }

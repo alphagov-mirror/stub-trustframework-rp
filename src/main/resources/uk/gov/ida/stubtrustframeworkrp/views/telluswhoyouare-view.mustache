@@ -289,7 +289,38 @@
                             </div>
                         </td>
                       </tr>
-                  {{/isDWP}}
+                      <tr class="govuk-table__row">
+                        <th scope="row" class="govuk-table__header"></th>
+                        <td class="govuk-table__cell">5_year_address_history</td>
+                        <td class="govuk-table__cell">
+                            <div class="govuk-form-group">
+                                <fieldset class="govuk-fieldset">
+                                    <div class="govuk-radios govuk-radios--small govuk-radios--inline">
+                                        <div class="govuk-radios__item">
+                                            <input class="govuk-radios__input" id="5_year_address_history-1" name="5_year_address_history" type="radio" value="">
+                                            <label class="govuk-label govuk-radios__label" for="5_year_address_history-1">
+                                                Not required
+                                            </label>
+                                        </div>
+                                        <div class="govuk-radios__item">
+                                            <input class="govuk-radios__input" id="5_year_address_history-2" name="5_year_address_history" type="radio" value="optional" checked="checked">
+                                            <label class="govuk-label govuk-radios__label" for="5_year_address_history-2">
+                                                Optional
+                                            </label>
+                                        </div>
+                                        <div class="govuk-radios__item">
+                                            <input class="govuk-radios__input" id="5_year_address_history-3" name="5_year_address_history" type="radio" value="essential">
+                                            <label class="govuk-label govuk-radios__label" for="5_year_address_history-3">
+                                                Essential
+                                            </label>
+                                        </div>
+                                    </div>
+                                </fieldset>
+                            </div>
+                        </td>
+                    </tr>
+
+                    {{/isDWP}}
                   {{^isDWP}}
                     <tr class="govuk-table__row">
                       <th scope="row" class="govuk-table__header">ATP Attributes</th>

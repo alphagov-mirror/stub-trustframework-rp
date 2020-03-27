@@ -81,12 +81,10 @@ public class StubRpResponseResource {
         JSONObject brokerClaimSet = brokerJWT.getJWTClaimsSet().toJSONObject();
 
         IdentityAttributes identityAttributes;
-        if (brokerClaimSet.get("_claim_names") != null && brokerClaimSet.get("_claim_names").toString().contains("verified_claims")) {
+        if (brokerClaimSet.get("_claim_names") != null) {
             identityAttributes = parseAggregatedClaims(brokerClaimSet);
         } else if (brokerClaimSet.containsKey("vp")) {
             identityAttributes = parseVerifiablePresentation(brokerClaimSet);
-        } else if (brokerClaimSet.get("_claim_names") != null) {
-            identityAttributes = parseAggregatedClaims(brokerClaimSet);
         } else {
             identityAttributes = mapClaimsToIdentityAttributes(brokerClaimSet);
         }
@@ -178,11 +176,8 @@ public class StubRpResponseResource {
                 throw new RuntimeException(e);
             }
         }
-        IdentityAttributes identityAttributes = mapClaimsToIdentityAttributes(claims);;
-
-        return identityAttributes;
+        return mapClaimsToIdentityAttributes(claims);
     }
-
 
     private IdentityAttributes parseVerifiablePresentation(JSONObject jsonObject) {
         JSONObject claims = new JSONObject();
@@ -207,14 +202,15 @@ public class StubRpResponseResource {
                 } else if (credentialSubject.containsKey("bankAccount")) {
                     JSONObject bankAccount = (JSONObject) credentialSubject.get("bankAccount");
                     claims.put("bank_account_number", bankAccount.get("bank_account_number"));
+                }  else if (credentialSubject.containsKey("addressCovers5Years")) {
+                    JSONObject bankAccount = (JSONObject) credentialSubject.get("addressCovers5Years");
+                    claims.put("address_covers_5_years", bankAccount.get("address_covers_5_years"));
                 }
             } catch (ParseException e) {
                 throw new RuntimeException(e);
             }
         }
-        IdentityAttributes identityAttributes = mapClaimsToIdentityAttributes(claims);;
-
-        return identityAttributes;
+        return mapClaimsToIdentityAttributes(claims);
     }
 
     private String sendAuthenticationResponseToServiceProvider(OidcResponseBody oidcResponseBody) {
