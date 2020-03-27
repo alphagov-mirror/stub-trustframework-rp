@@ -47,7 +47,7 @@ public class StubRpResponseResource {
 
     @POST
     @Path("/authenticationResponse")
-    public View handleAuthenticationResponse(String responseBody) throws ParseException, IOException {
+    public View handleAuthenticationResponse(String responseBody) throws ParseException {
         if (responseBody.contains("error")) {
             Map<String, String> responseMap = QueryParameterHelper.splitQuery(responseBody);
             String error = responseMap.get("error");
@@ -78,21 +78,18 @@ public class StubRpResponseResource {
         if (!validSignature) {
             return new InvalidResponseView("Invalid signature of Broker JWT");
         }
-        JSONObject jsonObject = brokerJWT.getJWTClaimsSet().toJSONObject();
+        JSONObject brokerClaimSet = brokerJWT.getJWTClaimsSet().toJSONObject();
 
         IdentityAttributes identityAttributes;
-        if (jsonObject.get("_claim_names") != null && jsonObject.get("_claim_names").toString().contains("verified_claims")) {
-            identityAttributes = extractAggregatedClaimsForVC(jsonObject);
-        } else if (jsonObject.containsKey("vp")) {
-            identityAttributes = parseVerifiablePresentation(jsonObject);
-        } else if (jsonObject.get("_claim_names") != null) {
-            identityAttributes = extractAggregatedClaims(jsonObject);
+        if (brokerClaimSet.get("_claim_names") != null && brokerClaimSet.get("_claim_names").toString().contains("verified_claims")) {
+            identityAttributes = parseAggregatedClaims(brokerClaimSet);
+        } else if (brokerClaimSet.containsKey("vp")) {
+            identityAttributes = parseVerifiablePresentation(brokerClaimSet);
+        } else if (brokerClaimSet.get("_claim_names") != null) {
+            identityAttributes = parseAggregatedClaims(brokerClaimSet);
         } else {
-            ObjectMapper objectMapper = new ObjectMapper();
-            identityAttributes = objectMapper.readValue(jsonObject.toJSONString(), IdentityAttributes.class);
+            identityAttributes = mapClaimsToIdentityAttributes(brokerClaimSet);
         }
-
-        Address address = deserializeAddressFromJWT(jsonObject);
 
         return new IdentityValidatedView(identityAttributes);
     }
@@ -132,11 +129,10 @@ public class StubRpResponseResource {
         return new FailedToSignUpView();
     }
 
-    private IdentityAttributes extractAggregatedClaimsForVC(JSONObject jsonObject) {
+    private IdentityAttributes parseAggregatedClaims(JSONObject jsonObject) {
         JSONObject claims = new JSONObject();
         JSONObject addressJsonObject;
 
-        IdentityAttributes identityAttributes;
         JSONObject claimSources = (JSONObject) jsonObject.get("_claim_sources");
         JSONObject claimNames = (JSONObject) jsonObject.get("_claim_names");
 
@@ -150,12 +146,12 @@ public class StubRpResponseResource {
             JSONObject jsonClaims;
             try {
                 SignedJWT signedJWT = SignedJWT.parse(claimSourceNameJson.get("JWT").toString());
-                jsonClaims = signedJWT.getJWTClaimsSet().toJSONObject();
                 boolean validSignature = responseService
                         .validateSignatureOfJWT(signedJWT, "idp", signedJWT.getHeader().getKeyID());
                 if (!validSignature) {
                     throw new RuntimeException("Invalid Signature ahhhhh");
                 }
+                jsonClaims = signedJWT.getJWTClaimsSet().toJSONObject();
 
                 if (jsonClaims.containsKey("vc")) {
                     try {
@@ -182,20 +178,14 @@ public class StubRpResponseResource {
                 throw new RuntimeException(e);
             }
         }
+        IdentityAttributes identityAttributes = mapClaimsToIdentityAttributes(claims);;
 
-        ObjectMapper objectMapper = new ObjectMapper();
-        try {
-            identityAttributes = objectMapper.readValue(claims.toJSONString(), IdentityAttributes.class);
-        } catch (IOException e) {
-            throw new RuntimeException("Cant map to IdentityAttributes object", e);
-        }
         return identityAttributes;
     }
 
 
     private IdentityAttributes parseVerifiablePresentation(JSONObject jsonObject) {
         JSONObject claims = new JSONObject();
-        IdentityAttributes identityAttributes;
         JSONObject verifiablePresentation = (JSONObject) jsonObject.get("vp");
         List<String> verifiableCredentialList = (List<String>) verifiablePresentation.get("verifiableCredential");
 
@@ -205,7 +195,7 @@ public class StubRpResponseResource {
                 boolean validSignature = responseService
                         .validateSignatureOfJWT(signedJWT, "idp", signedJWT.getJWTClaimsSet().getIssuer());
                 if (!validSignature) {
-                    throw new RuntimeException("Invalid Signature ahhhhh");
+                    throw new RuntimeException("Invalid JWT Signature");
                 }
                 JSONObject jsonClaims = signedJWT.getJWTClaimsSet().toJSONObject();
                 JSONObject credential = JSONObjectUtils.parse(jsonClaims.get("vc").toString());
@@ -218,78 +208,13 @@ public class StubRpResponseResource {
                     JSONObject bankAccount = (JSONObject) credentialSubject.get("bankAccount");
                     claims.put("bank_account_number", bankAccount.get("bank_account_number"));
                 }
-
             } catch (ParseException e) {
                 throw new RuntimeException(e);
             }
         }
-
-        ObjectMapper objectMapper = new ObjectMapper();
-        try {
-            identityAttributes = objectMapper.readValue(claims.toJSONString(), IdentityAttributes.class);
-        } catch (IOException e) {
-            throw new RuntimeException("Cant map to IdentityAttributes object", e);
-        }
-        return identityAttributes;
-    }
-
-    private IdentityAttributes extractAggregatedClaims(JSONObject jsonObject) {
-        JSONObject claims = new JSONObject();
-        IdentityAttributes identityAttributes;
-        JSONObject claimSources = (JSONObject) jsonObject.get("_claim_sources");
-        JSONObject claimNames = (JSONObject) jsonObject.get("_claim_names");
-
-        List<String> distinctClaimNameValues = claimNames.values()
-                .stream().distinct()
-                .map(Object::toString)
-                .collect(Collectors.toList());
-
-        for (String distinctClaimName : distinctClaimNameValues) {
-            JSONObject claimSourceNameJson = (JSONObject) claimSources.get(distinctClaimName);
-            JSONObject jsonClaims;
-            try {
-                SignedJWT signedJWT = SignedJWT.parse(claimSourceNameJson.get("JWT").toString());
-                boolean validSignature = responseService
-                        .validateSignatureOfJWT(signedJWT, "idp", signedJWT.getJWTClaimsSet().getIssuer());
-                if (!validSignature) {
-                    throw new RuntimeException("Invalid Signature ahhhhh");
-                }
-                jsonClaims = signedJWT.getJWTClaimsSet().toJSONObject();
-            } catch (ParseException e) {
-                throw new RuntimeException(e);
-            }
-
-            List<String> claimsInJWT = claimNames.entrySet()
-                    .stream()
-                    .filter(t -> t.getValue().equals(distinctClaimName))
-                    .map(a -> a.getKey())
-                    .collect(Collectors.toList());
-
-            for (String jsonClaimKey : claimsInJWT) {
-                String value = jsonClaims.get(jsonClaimKey).toString();
-                claims.put(jsonClaimKey, value);
-            }
-        }
-
-        ObjectMapper objectMapper = new ObjectMapper();
-        try {
-            identityAttributes = objectMapper.readValue(claims.toJSONString(), IdentityAttributes.class);
-        } catch (IOException e) {
-            throw new RuntimeException("Cant map to IdentityAttributes object", e);
-        }
+        IdentityAttributes identityAttributes = mapClaimsToIdentityAttributes(claims);;
 
         return identityAttributes;
-    }
-
-    private Address deserializeAddressFromJWT(JSONObject jwtJson) throws IOException, ParseException {
-        if (!jwtJson.containsKey("vc")) {
-            return null;
-        }
-        JSONObject credential = JSONObjectUtils.parse(jwtJson.get("vc").toString());
-        JSONObject credentialSubject = JSONObjectUtils.parse(credential.get("credentialSubject").toString());
-        JSONObject jsonAddress = JSONObjectUtils.parse(credentialSubject.get("address").toString());
-        ObjectMapper objectMapper = new ObjectMapper();
-        return objectMapper.readValue(jsonAddress.toJSONString(), Address.class);
     }
 
     private String sendAuthenticationResponseToServiceProvider(OidcResponseBody oidcResponseBody) {
@@ -317,4 +242,28 @@ public class StubRpResponseResource {
         }
         return responseBody.body();
     }
+
+    private IdentityAttributes mapClaimsToIdentityAttributes(JSONObject claims) {
+        IdentityAttributes identityAttributes;
+        ObjectMapper objectMapper = new ObjectMapper();
+        try {
+            identityAttributes = objectMapper.readValue(claims.toJSONString(), IdentityAttributes.class);
+        } catch (IOException e) {
+            throw new RuntimeException("Cant map to IdentityAttributes object", e);
+        }
+
+        return identityAttributes;
+    }
+
+    private Address deserializeAddressFromJWT(JSONObject jwtJson) throws IOException, ParseException {
+        if (!jwtJson.containsKey("vc")) {
+            return null;
+        }
+        JSONObject credential = JSONObjectUtils.parse(jwtJson.get("vc").toString());
+        JSONObject credentialSubject = JSONObjectUtils.parse(credential.get("credentialSubject").toString());
+        JSONObject jsonAddress = JSONObjectUtils.parse(credentialSubject.get("address").toString());
+        ObjectMapper objectMapper = new ObjectMapper();
+        return objectMapper.readValue(jsonAddress.toJSONString(), Address.class);
+    }
+
 }
