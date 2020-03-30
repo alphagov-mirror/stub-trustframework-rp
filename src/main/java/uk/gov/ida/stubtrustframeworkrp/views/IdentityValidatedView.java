@@ -4,14 +4,11 @@ import io.dropwizard.views.View;
 import uk.gov.ida.stubtrustframeworkrp.dto.Address;
 import uk.gov.ida.stubtrustframeworkrp.dto.IdentityAttributes;
 
-import java.util.Map;
-import java.util.Set;
-
 public class IdentityValidatedView extends View {
 
     private Address address;
     private IdentityAttributes identityAttributes;
-    Set<Map.Entry<String,String>> claimsSet;
+    private String brokerJWT;
 
     public IdentityValidatedView(String rpName, Address address, IdentityAttributes identityAttributes) {
         super("identityvalidated-view.mustache");
@@ -19,9 +16,11 @@ public class IdentityValidatedView extends View {
         this.identityAttributes = identityAttributes;
     }
 
-    public IdentityValidatedView(IdentityAttributes identityAttributes) {
+    public IdentityValidatedView(IdentityAttributes identityAttributes,
+                                 String brokerJWT) {
         super("identityvalidated-view.mustache");
         this.identityAttributes = identityAttributes;
+        this.brokerJWT = brokerJWT;
     }
 
     public IdentityAttributes getIdentityAttributes() {
@@ -34,12 +33,11 @@ public class IdentityValidatedView extends View {
 
     public boolean getHasAddress() { return address != null; }
 
-    public boolean getHasClaimsSet() { return claimsSet != null; }
-
-
     public Address getAddress() {
         return address;
     }
 
-    public Set<Map.Entry<String,String>> getClaimsSet() { return claimsSet; }
+    public String getBrokerJWT() {
+        return brokerJWT;
+    }
 }

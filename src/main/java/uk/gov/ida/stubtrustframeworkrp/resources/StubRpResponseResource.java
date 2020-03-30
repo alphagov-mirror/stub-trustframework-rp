@@ -47,7 +47,7 @@ public class StubRpResponseResource {
 
     @POST
     @Path("/authenticationResponse")
-    public View handleAuthenticationResponse(String responseBody) throws ParseException {
+    public View handleAuthenticationResponse(String responseBody) throws ParseException, IOException {
         if (responseBody.contains("error")) {
             Map<String, String> responseMap = QueryParameterHelper.splitQuery(responseBody);
             String error = responseMap.get("error");
@@ -89,7 +89,7 @@ public class StubRpResponseResource {
             identityAttributes = mapClaimsToIdentityAttributes(brokerClaimSet);
         }
 
-        return new IdentityValidatedView(identityAttributes);
+        return new IdentityValidatedView(identityAttributes, brokerJWT.serialize());
     }
 
     @POST
